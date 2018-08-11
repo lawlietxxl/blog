@@ -4,6 +4,7 @@ date: 2018-08-05 14:17:58
 categories: java10-source-reading
 tags: HashMap
 ---
+日常用HashMap相关的类最多，但对其内部实现并不了解。花时间读些源码，整理了一下。
 
 ## HashMap
 
@@ -13,7 +14,7 @@ tags: HashMap
 + HashMap的效率跟两个值相关——初始化的容量以及load factor。load factor是做rehash的时候map的容量标准。
 + HashMap不同步，所以在对HashMap做结构化操作（删除或者添加Mapping）的时候，一定要在外部做同步。或者使用 ``Collections.synchronizedMap`` 方法获取Map
 + Iterator提供一个HashMap的视图，在iterator外对HashMap进行结构性修改会抛出一个 ``ConcurrentModificationException``异常，但是这并不能保证多线程安全。
-
+<!--more-->
 ### 源码逻辑
 #### fields and inner class
 ```java
