@@ -565,7 +565,7 @@ disqus:
   enable: true
   shortname: lawlietxxl
   count: true
-  lazyload: false
+  lazyload: true
 
 # changyan
 changyan:
