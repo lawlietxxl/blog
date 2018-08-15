@@ -11,11 +11,18 @@ author: lawlietxxl
 language: zh-CN
 timezone: Asia/Shanghai
 
+# sitemap
+sitemap:
+  path: sitemap.xml
+baidusitemap:
+  path: baidusitemap.xml
+
 # URL
 ## If your site is put in a subdirectory, set url as 'http://yoursite.com/child' and root as '/child/'
-url: http://yoursite.com
+url: https://lawlietxxl.me
 root: /
-permalink: :year/:month/:day/:title/
+#permalink: :year/:month/:day/:title/
+permalink: :title.html
 permalink_defaults:
 
 # Directory
@@ -652,14 +659,14 @@ needmoreshare2:
 #google_site_verification:
 
 # Google Analytics
-#google_analytics:
+google_analytics: UA-79004381-1
 
 # Bing Webmaster tools verification setting
 # See: https://www.bing.com/webmaster/
 #bing_site_verification:
 
 # Yandex Webmaster tools verification setting
-# See: https://webmaster.yandex.ru/
+# See: https://webm aster.yandex.ru/
 #yandex_site_verification:
 
 # Baidu Webmaster tools verification setting

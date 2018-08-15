@@ -1,7 +1,7 @@
 ---
 title: HashMap and LinkedHashMap
 date: 2018-08-05 14:17:58
-categories: java10-source-reading
+categories: java10源码
 tags: HashMap
 ---
 日常用HashMap相关的类最多，但对其内部实现并不了解。花时间读些源码，整理了一下。
