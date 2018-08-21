@@ -11,5 +11,5 @@ Disallow: /fonts/
 Disallow: /vendors/
 Disallow: /fancybox/
 
-Sitemap: https://lawlietxxl.me/sitemap.xml
-Sitemap: https://lawlietxxl.me/baidusitemap.xml
+Sitemap: https://blog.lawlietxxl.site/sitemap.xml
+Sitemap: https://blog.lawlietxxl.site/baidusitemap.xml
