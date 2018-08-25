@@ -15,7 +15,7 @@ keywords: [java, 源码, 多线程, Concurrent, 锁, CAS]
 乐观锁的实现方法，简要言之就是在悲观锁锁资源的时候，乐观锁存储资源的状态而不是锁住。仅仅在提交事务的时候才锁一下，并与之前存储的资源状态进行对比，如果存在冲突证明之前已经有事务修改了该资源，当前事务进行回退。所以对于乐观锁来说，是"先改先生效"。
 乐观锁会导致事务回滚和不可预期的问题，乐观锁适用于 **Read-Often Write-Sometimes** 这种数据竞争不激烈的情况。
 悲观锁是“先取锁再访问”的保守策略，安全有保证，但是效率较低：加锁导致额外开销；可能产生死锁；还有会降低了并行性。悲观锁适用于数据争用激烈的环境，以及发生并发冲突时使用锁保护数据的成本要低于回滚事务的成本的环境中。
-
+什么是互斥锁？什么是自旋锁？
 
 ## 死锁
 当两个以上的运算单元，双方都在等待对方停止运行，以获取系统资源，但是没有一方提前退出时，就称为死锁。
@@ -131,7 +131,82 @@ public static class MyLock {
 具体原理用四个字概括就是：热点分离。可以看到，类中包含一个数组的数据结构`Cell[] cells`。当线程足够多，直到cells中的某个栏位出现CAS失败的时候，就会开辟新的栏位给竞争线程使用。这样到后来，几乎每个线程都有自己的一个栏位，在最后的时候用"map-reduce"的思想，把每个栏位相加，得到最后的总和。
 XXXAdder其实是XXXAccumulator的一种特殊情况，它可以输入一个函数进行计算方法的定制。
 
-# concurrent.locks
+# concurrent包
+除了前面的原子类，concurrent包还提供了**lock**，**ConcurrentHashMap**等同步数据结构，**Callable-Executor, Future-Poll**等多线程类。
+## lock 和 synchronized
+synchronized提供了jvm的*monitor lock*，lock是一个独立的类，提供新特性。synchronized是jvm的语句块，而lock从jdk5开始引入是一种比较高级的特性。一般来说如果不需要lock的新特性，或者说synchronized已经足够满足要求了，那么我们优先选用synchronized；如果我们需要用到**时间锁等候、可中断锁等候、无块结构锁、多个条件变量或者轮询锁**等特性，再使用lock。不是所有的lock都提供了这些特性，同时，注意lock的使用模板。`unlock`一定要在`finally`中调用，这样如果try中的语句出现异常，锁也会被释放掉，否则会很难查错。
+
+```java
+Lock l = ...;
+l.lock();
+try{
+    // access the resource protected by this lock
+} finally {
+    l.unlock();
+}
+```
+
+除了*Lock*接口，还提供了*ReadWriteLock*读写锁接口，关于读写锁注意点如下
++ 只要没有`writer`，读锁可以被多个线程同时持有。写锁只能被一个线程持有。
++ 写线程在release后，内存对读线程可见。
++ 读写锁效率跟读线程与写线程数目比例有关。即读写锁适用于，读的线程较多，写的线程较少的场景。
++ 在具体实现读写锁的时候，需要仔细考虑自己的场景。
+
+## `ReentrantLock` -- `Lock`的实现类
+
+
+## Thread类的 wait 和 notify 哪去了 —— `Condition`
+上面说Lock类用一些高级特性替代了`synchronized`语句块，那么Thread类的`wait`和`notify`等方法呢？答案是用`Condition`类来替代。
++ Condition类提供了`wait``notify``notifyAll`等监控方法替代原有的Thread类以配合Lock类。Lock类用`newCondition()`方法可以生成多个Condition
++ 一般来说，Condition都在检查状态的循环里进行await操作
+
+注释中给了一个很好理解的例子
+```java
+class BoundedBuffer {
+    final Lock lock = new ReentrantLock();
+    final Condition notFull  = <b>lock.newCondition();
+    final Condition notEmpty = <b>lock.newCondition();
+    
+    final Object[] items = new Object[100];
+    int putptr, takeptr, count;
+    
+    public void put(E x) throws InterruptedException {
+        lock.lock();
+        try {
+            while (count == items.length)
+                notFull.await();
+            items[putptr] = x;
+            if (++putptr == items.length) putptr = 0;
+            ++count;
+            notEmpty.signal();
+        } finally {
+            lock.unlock();
+        } 
+    }
+    
+    
+    public E take() throws InterruptedException {
+        lock.lock();
+        try {
+            while (count == 0)
+                notEmpty.await();
+            E x = (E) items[takeptr];
+            if (++takeptr == items.length) takeptr = 0;
+            --count;
+            notFull.signal();
+            return x;
+        } finally {
+            lock.unlock();
+        }
+    }
+}
+```
+
+## 同步数据结构
+
+## 多线程执行语句
+
+Chapter 17. Threads and Locks https://docs.oracle.com/javase/specs/jls/se8/html/jls-17.html#jls-17.4
 
 
 
