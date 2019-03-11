@@ -357,3 +357,9 @@ how many numbers between k1 and k2
 {% asset_img 2.png %}
 
 #### interval search trees
+{% asset_img 3.png %}
+#### rectangle intersection
+{% asset_img 4.png %}
+
+#### summary
+{% asset_img 5.png %}
