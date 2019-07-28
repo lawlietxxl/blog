@@ -77,7 +77,7 @@ SS是一个非常简单，但是非常有效的工具。在最开始ss这个工�
 [协议弱点 --> OTA --> AEAD](https://blessing.studio/why-do-shadowsocks-deprecate-ota/)
 
 
-#### 部分图片和资料来自
+#reference
 + http://vc2tea.com/whats-shadowsocks/
 + https://segmentfault.com/a/1190000011485579
 + https://zh.wikipedia.org/wiki/SOCKS
