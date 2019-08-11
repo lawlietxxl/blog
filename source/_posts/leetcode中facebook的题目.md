@@ -14,6 +14,8 @@ date: 2019-08-11 21:47:15
 [源码]
 [解释]
 ```
+
+源码中如果提交有错误，会标记  //bugfix
 <!--more-->
 # [283. Move Zeroes](https://leetcode.com/problems/move-zeroes/)
 
@@ -77,3 +79,52 @@ class Solution {
 + 动态规划，转换方程为上面的代码
 
 有一次错误提交，bug见代码中注释。为了方便，我为result数组多申请了一个格子。这里初始化result[0]应该是1.
+
+# [157. Read N Characters Given Read4](https://leetcode.com/problems/read-n-characters-given-read4/)
+
+##  100.00% 100.00% 17min
+
+```java
+/**
+ * The read4 API is defined in the parent class Reader4.
+ *     int read4(char[] buf);
+ */
+public class Solution extends Reader4 {
+    /**
+     * @param buf Destination buffer
+     * @param n   Number of characters to read
+     * @return    The number of actual characters read
+     */
+    public int read(char[] buf, int n) {
+        if(n <= 0) return 0;
+        
+        int iter = n/4;
+        
+        int result = 0;
+        char[] tmpBuf = new char[4];
+        for(int i = 0; i < iter; i++){
+            int tmpResult = read4(tmpBuf);
+            result += tmpResult;
+            for(int j = 0; j < tmpResult; j++){
+                buf[4*i + j] = tmpBuf[j];
+            }
+        }
+        //bugfix: 最后一次循环要特殊判断，取两者里面小的
+        int left = n%4;
+        if(left == 0) return result;
+        
+        int lastResult = read4(tmpBuf);
+        int iter2 = left < lastResult?left:lastResult;
+        
+        for(int i = 0;i<iter2; i++){
+            buf[4*iter + i] = tmpBuf[i];
+        }
+        //注意加的这个数值
+        result += iter2;
+        return result;
+        
+    }
+}
+```
+
+消耗时间较多了，注意两个bug
