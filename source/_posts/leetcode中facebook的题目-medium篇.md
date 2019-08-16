@@ -142,3 +142,48 @@ class Solution {
 ```
 
 使用java的PriorityQueue能够很快给出结果，但是时间上没有优势，待优化。
+
+# [215. Kth Largest Element in an Array](https://leetcode.com/problems/kth-largest-element-in-an-array/)
+
+## 32.77 78.76 40mins
+```java
+class Solution {
+    public int findKthLargest(int[] nums, int k) {
+        return sort(nums, 0, nums.length-1, nums.length-k);
+    }
+    
+    private int sort(int[] nums, int l, int r, int i){
+        int mid = partition(nums, l, r);
+        if(mid == i) return nums[mid];
+        if(mid < i) return sort(nums, mid+1, r, i);
+        return sort(nums, l, mid-1, i);
+    }
+    
+    private int partition(int[] nums, int l, int r){
+        //bugfix
+        if(l == r) return l;
+        int i = l, j = r + 1;
+        while(true){
+            while(nums[++i] < nums[l])
+                if(i == r) break;
+            while(nums[l] < nums[--j])
+                if(j == l) break;
+            if(i >= j) break;
+            exchange(nums, i, j);
+        }
+        exchange(nums, l, j);
+        return j;
+    }
+    
+    private void exchange(int[] nums, int i, int j){
+        int tmp = nums[i];
+        nums[i] = nums[j];
+        nums[j] = tmp;
+    }
+}
+```
+
+使用快速排序的变通方法可以得到结果，注意控制边界（bugfix）。
+**tips***：
++ 快排内有玄机，详情见常用算法模板
++ 快拍时间复杂度仅仅为30+，需要优化
