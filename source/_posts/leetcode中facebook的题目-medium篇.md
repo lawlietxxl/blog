@@ -302,3 +302,56 @@ class Solution {
 **思路**:此题目跟[56. Merge Intervals](https://leetcode.com/problems/merge-intervals/)思路一样
 + start排序，end排序
 + 两者取比较小的数进行计数，start小，则result++；end小于等于，则result--。（注意取临时变量）
+
+# [238. Product of Array Except Self](https://leetcode.com/problems/product-of-array-except-self/)
+
+## 100.00 92.13 15min
+```java
+class Solution {
+    public int[] productExceptSelf(int[] nums) {
+        int[] n1 = new int[nums.length];
+        int[] n2 = new int[nums.length];
+        n1[0] = 1;
+        for(int i = 1; i < nums.length; i++) {
+            // bugfix
+            n1[i] = nums[i-1] * n1[i-1];
+        }
+        n2[n2.length-1] = 1;
+        for(int i = 1; i < nums.length; i++) {
+            n2[n2.length-1-i] = n2[n2.length-i] * nums[nums.length-i];
+        }
+        
+        int[] result = new int[nums.length];
+        for(int i = 0; i < result.length; i++) {
+            result[i] = n1[i] * n2[i];
+        }
+        
+        return result;
+    }
+}
+```
+
+**tips**:
+建立两个数组，一个表示前面的乘积，一个表示后面的乘积。(注意数组长度)
+按照提示思考一下 constant 空间复杂度的解法
+
+## 100.00 100.00 8mins
+```java
+class Solution {
+    public int[] productExceptSelf(int[] nums) {
+        int[] result = new int[nums.length];
+        result[0] = 1;
+        for(int i = 1; i < nums.length; ++i){
+            result[i] = result[i-1] * nums[i-1];
+        }
+        
+        int mul = 1;
+        for(int i = 1; i < nums.length; ++i){
+            mul *= nums[nums.length-i];
+            result[nums.length-1-i] *= mul;
+        }
+        return result;
+    }
+}
+```
+constant 空间复杂度的解法

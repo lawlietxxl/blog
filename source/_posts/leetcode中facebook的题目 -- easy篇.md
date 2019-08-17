@@ -210,3 +210,117 @@ class Solution {
 **tips**:
 + 最好用length 而并非index（length比index多1）
 + 注意先减后用
+
+# [350. Intersection of Two Arrays II](https://leetcode.com/problems/intersection-of-two-arrays-ii/)
+## 17.64 83.87 10mins
+```java
+class Solution {
+    public int[] intersect(int[] nums1, int[] nums2) {
+        Map<Integer, Integer> n1Map = new HashMap<>();
+        Map<Integer, Integer> n2Map = new HashMap<>();
+        Map<Integer, Integer> resultMap = new HashMap<>();
+        for(int n : nums1) {
+            if(!n1Map.containsKey(n))
+                n1Map.put(n, 0);
+            n1Map.put(n, n1Map.get(n)+1);
+        }
+        
+        for(int n : nums2) {
+            if(!n2Map.containsKey(n))
+                n2Map.put(n, 0);
+            n2Map.put(n, n2Map.get(n)+1);
+        }
+        
+        for(Map.Entry<Integer, Integer> entry: n1Map.entrySet()) {
+            if(n2Map.containsKey(entry.getKey()))
+                resultMap.put(entry.getKey(), Math.min(entry.getValue(), n2Map.get(entry.getKey())));
+        }
+        int number = 0;
+        for(Map.Entry<Integer, Integer> entry: resultMap.entrySet()) {
+            number += entry.getValue();
+        }
+        
+        int[] result = new int[number];
+        number = 0;
+        for(Map.Entry<Integer, Integer> entry: resultMap.entrySet()) {
+            int val = entry.getValue();
+            while(val-- != 0)result[number++] = entry.getKey();
+        }
+        return result;
+    }
+}
+```
+
+使用两个map进行统计，然后用一个resultMap去整理数据，最后输出。但是能看出时间复杂度很差。
+
+## 91.22 33.87
+```java
+public class Solution {
+    public int[] intersect(int[] nums1, int[] nums2) {
+        List<Integer> res = new ArrayList<Integer>();
+        Arrays.sort(nums1);
+        Arrays.sort(nums2);
+        for(int i = 0, j = 0; i< nums1.length && j<nums2.length;){
+                if(nums1[i]<nums2[j]){
+                    i++;
+                }
+                else if(nums1[i] == nums2[j]){
+                    res.add(nums1[i]);
+                    i++;
+                    j++;
+                }
+                else{
+                    j++;
+                }
+        }
+        int[] result = new int[res.size()];
+        for(int i = 0; i<res.size();i++){
+            result[i] = res.get(i);
+        }
+        return result;
+    }
+}
+```
+
+**tips**:
+可以看得出，虽然时间复杂度看上去较慢，达到 nlgn，但是速度很快。这是因为**对基础类型的排序java非常快**
+
+# [953. Verifying an Alien Dictionary](https://leetcode.com/problems/verifying-an-alien-dictionary/)
+
+## 100.00 100.00 17mins
+```java
+class Solution {
+    public boolean isAlienSorted(String[] words, String order) {
+        int[] dic = toDic(order);
+        // bugfix
+        for(int i = 0; i < words.length-1; i++) {
+            if(compare(words[i], words[i+1], dic) == 1) return false;
+        }
+        return true;
+    }
+    
+    private int[] toDic(String order) {
+        int ind = 0;
+        int[] result = new int[26];
+        for(char c: order.toCharArray()){
+            result[c-'a'] = ind++; 
+        }
+        return result;
+    }
+    
+    private int compare(String s1, String s2, int[] dic) {
+        int i1, i2;
+        for(i1 = 0, i2 = 0; i1 < s1.length() && i2 < s2.length(); i1++, i2++) {
+            char c1 = s1.charAt(i1), c2 = s2.charAt(i2);
+            if(dic[c1-'a'] < dic[c2-'a']) return -1;
+            else if(dic[c1-'a'] > dic[c2-'a']) return 1;
+        }
+        
+        if(s1.length() == s2.length()) return 0;
+        if(i1 == s1.length()) return -1;
+        return 1;
+    }
+}
+```
+
+注意bugfix地方，边界写错了
