@@ -95,3 +95,63 @@ public class Solution extends Reader4 {
 + 顺序为先读缓存，再读文件，最后再写缓存。注意更新各种本地变量
 感觉有点像tcp协议操作系统之类的实现
 
+# [23. Merge k Sorted Lists](https://leetcode.com/problems/merge-k-sorted-lists/)
+
+## 98.74 27.33 18mins
+```java
+/**
+ * Definition for singly-linked list.
+ * public class ListNode {
+ *     int val;
+ *     ListNode next;
+ *     ListNode(int x) { val = x; }
+ * }
+ */
+class Solution {
+    public ListNode mergeKLists(ListNode[] lists) {
+        //bugfix
+        if(lists.length == 0) return null;
+        
+        return merge(lists, 0, lists.length-1);
+    }
+    
+    private ListNode merge(ListNode[] lists, int lo, int hi){  
+        if(lo == hi) return lists[lo];
+        int mid = lo + (hi - lo)/2;
+        ListNode l1 = merge(lists, lo, mid);
+        ListNode l2 = merge(lists, mid+1, hi);
+        
+        ListNode result = new ListNode(0);
+        ListNode tail = result;
+        
+        while(true){
+            if(l1 == null && l2 == null) break;
+            if(l1 == null && l2 != null){
+                tail.next = l2;
+                break;
+            }
+            if(l1 != null && l2 == null){
+                tail.next = l1;
+                break;
+            }
+            
+            if(l1.val < l2.val) {
+                tail.next = l1;
+                l1 = l1.next;
+                tail.next.next = null;
+                tail = tail.next;
+            }else{
+                tail.next = l2;
+                l2 = l2.next;
+                tail.next.next = null;
+                tail = tail.next;
+            }
+        }
+        
+        result = result.next;
+        return result;
+    }
+}
+```
+使用分治法的思想，一半一半的处理，把复杂度降低log。
+但是内存占用较高，而且并不会分析算法复杂度。

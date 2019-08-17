@@ -187,3 +187,39 @@ class Solution {
 **tips***：
 + 快排内有玄机，详情见常用算法模板
 + 快拍时间复杂度仅仅为30+，需要优化
+
+# [56. Merge Intervals](https://leetcode.com/problems/merge-intervals/)
+
+## 25.19 36.23 18mins
+```java
+class Solution {
+    public int[][] merge(int[][] intervals) {
+        if(intervals.length <= 1) return intervals;
+        //bugfix wrong: Collections.sort
+        Arrays.sort(intervals, (l1, l2)->Integer.compare(l1[0], l2[0]));
+        
+        List<int[]> result = new ArrayList<>();
+        result.add(intervals[0]);
+        
+        for(int i = 1; i < intervals.length; ++i){
+            int[] in = intervals[i];
+            int[] ou = result.get(result.size()-1);
+            if(ou[1] < in[0]) result.add(in);
+            else {
+                result.remove(result.size()-1);
+                result.add(new int[]{ou[0], Math.max(ou[1], in[1])});
+            }
+        }
+        
+        int[][] resultArray = new int[result.size()][];
+        for(int i = 0; i < result.size(); ++i){
+            resultArray[i] = result.get(i);
+        }
+        return resultArray;
+    }
+}
+```
+
+**思路**
++ 按照第一位排序，这样排序好之后，就可以按照顺序依次merge了
++ TODO: 空间、时间都不优，待优化

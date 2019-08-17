@@ -7,6 +7,32 @@ date: 2019-08-16 22:48:22
 ---
 有一些方法和类在算法中经常使用，总结一下，方便复习。
 <!--more-->
+# 排序
+```java
+List<Object> l = new ArrayList<>();
+Collections.sort(l, (l1, l2)->{
+    // compare method l1 < l2 ，返回-1，则l1在l2之前
+});
+
+
+int[] l = new int[3];
+Arrays.sort(l, (i1, i2)-> Integer.compare(i1, i2););
+```
+
+# 数组初始化
+**tips**:
++ 不要同时使用静态初始化和动态初始化，也就是说，不要在进行数组初始化时，既指定数组的长度，也为每个数组元素分配初始值。
+```java
+// 1 动态初始化
+int[] intArr;
+intArr = new int[]{1,2,3,4,5,9};
+// 2 静态初始化
+int[] price = new int[4];
+// 3 简化的静态初始化
+String[] strArr = {"张三","李四","王二麻"};
+
+```
+
 # PriorityQueue
 三个方法：offer, poll, peek
 默认的优先队列，先小后大。自定义需要重写Comparator
@@ -37,4 +63,13 @@ date: 2019-08-16 22:48:22
         while (priorityQueue.size() != 0) {
             System.out.println(priorityQueue.poll()); // 3 2 1
         }
+```
+
+# 泛型相关方法
+下面是符合java语法的，int[] 不属于primitive type
+```java
+List<int[]> a= new ArrayList<>();
+// 排序可以使用lambda，很easy
+ 
+Collections.sort(a, (a1, a2)->Integer.compare(a1[0], a2[0]));
 ```
