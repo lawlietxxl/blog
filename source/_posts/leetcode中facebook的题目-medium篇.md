@@ -223,3 +223,82 @@ class Solution {
 **思路**
 + 按照第一位排序，这样排序好之后，就可以按照顺序依次merge了
 + TODO: 空间、时间都不优，待优化
+
+## 95.63 71.02
+```java
+class Solution {
+	public int[][] merge(int[][] intervals) {
+        int length=intervals.length;
+        if(length<=1)
+            return intervals;
+    
+        int[] start = new int[length];
+        int[] end = new int[length];
+        for(int i=0;i<length;i++){
+            start[i]=intervals[i][0];
+            end[i]=intervals[i][1];
+        }
+        Arrays.sort(start);
+        Arrays.sort(end);
+        int startIndex=0;
+        int endIndex=0;
+        List<int[]> result = new LinkedList<>();
+        while(endIndex<length){
+            //as endIndex==length-1 is evaluated first, start[endIndex+1] will never hit out of index
+            if(endIndex==length-1 || start[endIndex+1]>end[endIndex]){
+                result.add(new int[]{start[startIndex],end[endIndex]});
+                startIndex=endIndex+1;
+            }
+            endIndex++;
+        }
+        return result.toArray(new int[result.size()][]);
+    }
+}
+```
+
+**tips**:
++ 看上去似乎经过了两次排序，但是在java中，对基础类型排序要比对object排序快很多。
++ 思路：
+    + 1.start一组排序，end一组排序；类似一个栈，当出现的start和end相等的时候就可以进行结果插入；
+    + 2.或者是算法中所示，取endIndex下一个start为计算标识，如果大就进行上一个interval的结果插入
+
+{% asset_img 56.png %}
+
+# [253. Meeting Rooms II](https://leetcode.com/problems/meeting-rooms-ii/)
+
+## 100.00 75.64
+```java
+class Solution {
+    public int minMeetingRooms(int[][] intervals) {
+        if(intervals.length <= 1) return intervals.length;
+        int[] start = new int[intervals.length];
+        int[] end = new int[intervals.length];
+        for(int i = 0; i < intervals.length; i++){
+            start[i] = intervals[i][0];
+            end[i] = intervals[i][1];
+        }
+        Arrays.sort(start);
+        Arrays.sort(end);
+        
+        int result = 0, tmpResult = 0;
+        // i means startIndex, j means endIndex
+        int i = 0,j = 0;
+        
+        while(i < start.length){
+            if(end[j] <= start[i]){
+                tmpResult --;
+                j++;
+            }else{
+                tmpResult ++;
+                i ++;
+                result = Math.max(result, tmpResult);
+            }
+        }
+        return result;
+    }
+}
+```
+
+**思路**:此题目跟[56. Merge Intervals](https://leetcode.com/problems/merge-intervals/)思路一样
++ start排序，end排序
++ 两者取比较小的数进行计数，start小，则result++；end小于等于，则result--。（注意取临时变量）
