@@ -355,3 +355,65 @@ class Solution {
 }
 ```
 constant 空间复杂度的解法
+
+# [560. Subarray Sum Equals K](https://leetcode.com/problems/subarray-sum-equals-k/)
+
+## 30.78 97.83 38mins
+
+```java
+class Solution {
+    class Num {
+        int index;
+        int val;
+        Num(int val, int index){
+            this.val = val;
+            this.index = index;
+        }
+    }
+    
+    public int subarraySum(int[] nums, int k) {
+        if(nums.length == 0) return 0;
+        if(nums.length == 1)
+            if(nums[0] == k) return 1;
+            else return 0;
+        
+        Num[] classNums = new Num[nums.length];
+        classNums[0] = new Num(nums[0], 0);
+        for(int i = 1; i < nums.length; i++) {
+            nums[i] += nums[i-1];
+            classNums[i] = new Num(nums[i], i);
+        }
+        
+        //bugfix
+        if(k >= 0)
+            Arrays.sort(classNums, (n1, n2)->Integer.compare(n1.val, n2.val));
+        else
+            Arrays.sort(classNums, (n1, n2)->Integer.compare(n2.val, n1.val));
+        
+        int res = 0;
+        // i >= j
+        //bugfix
+        if(k >= 0)
+        for(int i = 0; i < nums.length;i++)
+            for(int j = i; j < nums.length; j++){
+                if(i == j && classNums[i].val == k) res++;
+                if(classNums[j].val - classNums[i].val > k) break;
+                if(classNums[j].val - classNums[i].val == k && classNums[j].index > classNums[i].index) res++;
+            }
+        else
+        for(int i = 0; i < nums.length;i++)
+            for(int j = i; j < nums.length; j++){
+                if(i == j && classNums[i].val == k) res++;
+                if(classNums[j].val - classNums[i].val < k) break;
+                if(classNums[j].val - classNums[i].val == k && classNums[j].index > classNums[i].index) res++;
+            }
+        return res;
+    }
+}
+```
+
+**hint**: 在brute-force基础上做改进： 做累加 --> 排个序（可以少比几次）-->依次相减，但要判断index前后。
+
+总结：可以看出这么写很容易出错。而且时间复杂度是N^2，空间复杂度是N。还不如直接累加完之后，brute-force。待优化。
+
+用map是比较好的写法，可以看到solution里面有。很不错。

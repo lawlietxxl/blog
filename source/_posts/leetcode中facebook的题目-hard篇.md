@@ -155,3 +155,49 @@ class Solution {
 ```
 使用分治法的思想，一半一半的处理，把复杂度降低log。
 但是内存占用较高，而且并不会分析算法复杂度。
+
+# [301. Remove Invalid Parentheses](https://leetcode.com/problems/remove-invalid-parentheses/) (FAIL)
+
+## DFS ANSWER
+```java
+class Solution {
+    public List<String> removeInvalidParentheses(String s) {
+        List<String> res = new ArrayList<>();
+        
+        dfs(s, res, 0, 0, '(', ')');
+        return res;
+    }
+    
+    void dfs(String s, List<String> res, int i_last, int j_last, char c1, char c2) {
+        int stack = 0;
+        for(int i = i_last; i < s.length(); ++i){
+            if(s.charAt(i) == c1) stack++;
+            if(s.charAt(i) == c2) stack--;
+            if(stack >= 0) continue;
+            // stack < 0, dfs all of before
+            //bugfix
+            for(int j = j_last; j <= i; j++){
+                if(s.charAt(j) == c2 && (j == j_last || s.charAt(j-1) != c2))
+                    dfs(s.substring(0, j) + s.substring(j+1, s.length()), res, i, j , c1, c2);
+            }
+            //bugfix
+            return;
+        }
+        //后缀已经正确，现在开始处理前缀
+        //倒排序
+        String reversed = new StringBuilder(s).reverse().toString();
+        if(c1 == '(')
+            dfs(reversed, res, 0, 0, ')', '(');
+        else
+            res.add(reversed);
+    }
+}
+```
+
+**tips**
++ 要看到本质。删除几个字符形成正确的结构 --> 有多种删除方法 --> 本质是组合的问题 --> 组合的问题都可以用DFS解。
++ 结论。组合问题 = DFS问题（比如八皇后）
++ 先解决后缀的正确性，再倒序后处理前缀。
++ 上文思路见图。
+    + 注意 i 和 j：i前面的字符串已经是正确的了，j是为了防止重复。所以i 和 j要记录下来，不断移动。
+{% asset_img 301.png %}
