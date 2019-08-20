@@ -480,3 +480,31 @@ class Solution {
 **tips**:
 思考四种情况，分别处理。注意第四种，一开始处理方式不对，耽误了很长时间：找到后面大于flag的第一个值，swap后，把后面的全部swap。
 {% asset_img 31.png %}
+
+# [986. Interval List Intersections](https://leetcode.com/problems/interval-list-intersections/)
+
+## 99.93 78.38 15mins
+```java
+class Solution {
+    public int[][] intervalIntersection(int[][] A, int[][] B) {
+        if(A.length == 0 || B.length == 0) return new int[0][];
+        
+        List<int[]> res = new ArrayList<>();
+        for(int i = 0, j = 0; i < A.length && j < B.length;) {
+            int[] tmp = inter(A[i], B[j]);
+            if(null != tmp) res.add(tmp);
+            if(A[i][1] >= B[j][1]) j++;
+            else i++;
+        }
+        
+        return res.toArray(new int[1][]);
+    }
+    
+    int[] inter(int[] a, int[] b) {
+        // 判断是否存在交集，利用线段中心距离 和 线段长度之和做比较
+        if( Math.abs((a[0]+a[1]) - (b[0]+b[1])) <= (b[1]-b[0] + a[1] - a[0])){
+            return new int[]{Math.max(a[0], b[0]), Math.min(a[1], b[1])};
+        } else return null;
+    }
+}
+```
