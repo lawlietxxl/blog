@@ -417,3 +417,66 @@ class Solution {
 总结：可以看出这么写很容易出错。而且时间复杂度是N^2，空间复杂度是N。还不如直接累加完之后，brute-force。待优化。
 
 用map是比较好的写法，可以看到solution里面有。很不错。
+
+# [31. Next Permutation](https://leetcode.com/problems/next-permutation/)
+
+## 100.00 31.00 40min
+```java
+class Solution {
+    public void nextPermutation(int[] nums) {
+        if(nums.length <= 1) return; 
+        int i = nums.length - 2;
+        while( i >= 0){
+            if(nums[i] == nums[i+1]) i--;
+            // bugfix
+            else break;
+        }
+        
+        if(i == -1) return;
+        if(nums[i] < nums[i+1]){
+            swap(nums, i, i+1);
+            return;
+        }
+        
+        while( i >= 0){
+            if(nums[i] >= nums[i+1]) i--;
+            // bugfix
+            else break;
+        }
+        if(i == -1){
+            swapAll(nums, 0, nums.length-1);
+            return;
+        }
+        
+        // wrong here, bugfix
+        int j = findBigger(nums, i+1, nums[i]);
+        swap(nums, i, j);
+        swapAll(nums, i+1, nums.length-1);
+    }
+    
+    private int findBigger(int[] nums, int start, int targ) {
+        int result = start;
+        for(int i = start; i < nums.length; i++){
+            if(nums[i] <= targ) break;
+            if(nums[i] <= nums[result]) result = i;
+        }
+        return result;
+    }
+    
+    
+    private void swap(int[] nums, int i, int j){
+        int tmp = nums[i];
+        nums[i] = nums[j];
+        nums[j] = tmp;
+    }
+    
+    private void swapAll(int[] nums, int start, int end){
+        for(int i = start, j = end;i<j;i++,j--){
+            swap(nums, i, j);
+        }
+    }
+}
+```
+**tips**:
+思考四种情况，分别处理。注意第四种，一开始处理方式不对，耽误了很长时间：找到后面大于flag的第一个值，swap后，把后面的全部swap。
+{% asset_img 31.png %}
