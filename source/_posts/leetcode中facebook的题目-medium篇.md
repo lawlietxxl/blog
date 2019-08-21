@@ -508,3 +508,95 @@ class Solution {
     }
 }
 ```
+
+# [98. Validate Binary Search Tree](https://leetcode.com/problems/validate-binary-search-tree/)
+## 100.00 79.54 20mins
+```java
+/**
+ * Definition for a binary tree node.
+ * public class TreeNode {
+ *     int val;
+ *     TreeNode left;
+ *     TreeNode right;
+ *     TreeNode(int x) { val = x; }
+ * }
+ */
+class Solution {
+    public boolean isValidBST(TreeNode root) {
+        if(root == null) return true;
+        boolean leftB = true, rightB = true;
+        TreeNode lr = leftRight(root);
+        TreeNode rl = rightLeft(root);
+        if(root.left != null)
+            // bugfix
+            if(root.left.val < root.val && (lr == null || lr.val < root.val)) leftB = isValidBST(root.left);
+            else return false;
+        if(root.right != null)
+            // bugfix
+            if(root.right.val > root.val && (rl == null || rl.val > root.val)) rightB = isValidBST(root.right);
+            else return false;
+        return leftB&&rightB;
+    }
+    
+    TreeNode leftRight(TreeNode root) {
+        if(root.left == null) return null;
+        TreeNode result = root.left;
+        while(result.right != null) result = result.right;
+        return result;
+    }
+    
+    TreeNode rightLeft(TreeNode root) {
+        if(root.right == null) return null;
+        TreeNode result = root.right;
+        while(result.left != null) result = result.left;
+        return result;
+    }
+}
+```
+**思路**：
++ 对于图1的三元节点，保证 左<中<右 的大小顺序
++ 左子树的最右边节点 < 中 < 右子数的最左边节点哈罗芬瑟到了可热了狂热冷酷日
+
+# [199. Binary Tree Right Side View](https://leetcode.com/problems/binary-tree-right-side-view/)
+
+##  98.32 100.00 12mins
+```java
+/**
+ * Definition for a binary tree node.
+ * public class TreeNode {
+ *     int val;
+ *     TreeNode left;
+ *     TreeNode right;
+ *     TreeNode(int x) { val = x; }
+ * }
+ */
+class Solution {
+    public List<Integer> rightSideView(TreeNode root) {
+        List<Integer> res = new ArrayList<>();
+        if(root == null) return res;
+        
+        TreeNode sentinal = new TreeNode(0);
+        TreeNode lastNode = null;
+        Queue<TreeNode> q = new LinkedList<>();
+        
+        q.offer(root);
+        q.offer(sentinal);
+        
+        while(q.size() != 0) {
+            TreeNode tmp = q.poll();
+            if(tmp != sentinal) lastNode = tmp;
+            else {
+                res.add(lastNode.val);
+                if(q.size() != 0) q.offer(tmp);
+                continue;
+            }
+            if(tmp.left != null) q.offer(tmp.left);
+            if(tmp.right != null) q.offer(tmp.right);
+        }
+        
+        return res;
+    }
+}
+```
+
+使用队列和哨兵位，注意哨兵归放到队尾的时候要判断一下当前队列是否为空

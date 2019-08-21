@@ -201,3 +201,68 @@ class Solution {
 + 上文思路见图。
     + 注意 i 和 j：i前面的字符串已经是正确的了，j是为了防止重复。所以i 和 j要记录下来，不断移动。
 {% asset_img 301.png %}
+
+# [124. Binary Tree Maximum Path Sum](https://leetcode.com/problems/binary-tree-maximum-path-sum/)
+
+## 5.04 5.95 1h
+```java
+/**
+ * Definition for a binary tree node.
+ * public class TreeNode {
+ *     int val;
+ *     TreeNode left;
+ *     TreeNode right;
+ *     TreeNode(int x) { val = x; }
+ * }
+ */
+class Solution {
+    public int maxPathSum(TreeNode root) {
+        if(root == null) return 0;
+        
+        // exclude current root
+        return traveralTree(root);
+    }
+    private int traveralTree(TreeNode root) {
+        int l1 = computeLeft(root);
+        int r1 = computeRight(root);
+        int res = (l1+r1) - root.val;
+        if(root.left != null) {
+            int l = traveralTree(root.left);
+            res = res > l ? res : l;
+        }
+        if(root.right != null) {
+            int r = traveralTree(root.right);
+            res = res > r ? res : r;
+        }
+        return res;
+    }
+    
+    // include root, root should not be null
+    private int computeLeft(TreeNode root) {
+        int res = root.val;
+        if(root.left != null) {
+            int l = computeLeft(root.left);
+            int r = computeRight(root.left);
+            int more = Math.max(l, r);
+            res += Math.max(0, more);
+        }
+        return res;
+    }
+    
+    private int computeRight(TreeNode root) {
+        int res = root.val;
+        if(root.right != null) {
+            int l = computeLeft(root.right);
+            int r = computeRight(root.right);
+            int more = Math.max(l, r);
+            res += Math.max(0, more);
+        }
+        return res;
+    }
+}
+```
+
+遍历这棵树（traveralTree），分别计算经过每个node的最大值（通过计算左侧和右侧最大值进行间接计算），最后输出最大结果。
+**todo**：
++ 感觉上有很多复杂计算，需要优化
++ 为什么内存占用会这么大，递归的内存占用分析不会。可以用这道题进行分析
