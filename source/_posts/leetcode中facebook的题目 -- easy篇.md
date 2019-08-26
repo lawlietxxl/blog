@@ -371,3 +371,30 @@ class Solution {
 中序遍历全部的点，每个点计算一次最大值。
 存在大量的重复计算。
 和内存占用。（并不会分析）待优化。
+
+# [680. Valid Palindrome II](https://leetcode.com/problems/valid-palindrome-ii/)
+
+## TODO: 9.68 97.22 11mins
+```java
+class Solution {
+    public boolean validPalindrome(String s) {
+        if(s.length() <= 1) return true;
+        
+        for(int i = 0; i < s.length()/2; i ++)
+            if(s.charAt(i) != s.charAt(s.length()-1-i))
+                return check(s.substring(i, s.length()-1-i)) || check(s.substring(i+1, s.length()-i));
+        return true;
+    }
+    
+    private boolean check(String s){
+        if(s == null || s.length() <= 1) return true;
+        for(int i = 0; i < s.length()/2; i ++)
+            if(s.charAt(i) != s.charAt(s.length()-1-i))
+                return false;
+        return true;
+    }
+}
+```
+
+题目不难，去掉一个字母能回文。判断去掉哪个即可。
+但是时间效率貌似只有9.待优化
