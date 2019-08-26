@@ -600,3 +600,46 @@ class Solution {
 ```
 
 使用队列和哨兵位，注意哨兵归放到队尾的时候要判断一下当前队列是否为空
+
+# [621. Task Scheduler](https://leetcode.com/problems/task-scheduler/)
+
+## AFTER FAIL: 41.12 86.76 26mins
+```java
+class Solution {
+    public int leastInterval(char[] tasks, int n) {
+        if(tasks.length == 0) return 0;
+        int[] data = new int[26];
+        for(char c: tasks)
+            data[c-'A']++;
+        PriorityQueue<Integer> q = new PriorityQueue<>(Collections.reverseOrder());
+        for(int i: data)
+            if(i != 0)
+                q.offer(i);
+        int result = 0;
+        while(q.size() != 0) {
+            List<Integer> buf = new ArrayList<>();
+            // bugfix n+1 ||
+            for(int i = 0; i < n+1 && (buf.size()!=0 || q.size()!=0); i++){
+                result ++;
+                //bugfix
+                if(q.size() != 0) {
+                    int t = q.poll();
+                    if(--t > 0) buf.add(t);
+                }
+            }
+            for(Integer i: buf) 
+                q.offer(i);
+        }
+        
+        return result;
+    }
+}
+```
+
+使用PriorityQueue做。第一次没想出来。
+**思路**：
++ 优先队列整理数据
++ 依次取前n个数字，放到结果中，如果数字用完就不放回去，如果没用完则放回队列，重复此操作。
++ 注意几个bugfix细节点
+
+最后的时间只有42，还有优化空间。复杂度是 nlog(n)?

@@ -324,3 +324,50 @@ class Solution {
 ```
 
 注意bugfix地方，边界写错了
+
+# [543. Diameter of Binary Tree](https://leetcode.com/problems/diameter-of-binary-tree/)
+
+## TODO: 13.73 19.48 20mins
+```java
+/**
+ * Definition for a binary tree node.
+ * public class TreeNode {
+ *     int val;
+ *     TreeNode left;
+ *     TreeNode right;
+ *     TreeNode(int x) { val = x; }
+ * }
+ */
+class Solution {
+    public int diameterOfBinaryTree(TreeNode root) {
+        return traversal(root);
+    }
+    
+    private int traversal(TreeNode root) {
+        if(root == null) return 0;
+        int l = traversal(root.left);
+        int mid = comp(root);
+        int r = traversal(root.right);
+        return Math.max(l, Math.max(mid, r));
+    }
+    
+    private int comp(TreeNode root) {
+        if(root == null) return 0;
+        int l = dfs(root.left);
+        int r = dfs(root.right);
+        return l + r;
+    }
+    
+    private int dfs(TreeNode root) {
+        if(root == null) return 0;
+        int l = dfs(root.left);
+        int r = dfs(root.right);
+        return 1 + Math.max(l, r);
+    }
+}
+```
+
+**思路**：
+中序遍历全部的点，每个点计算一次最大值。
+存在大量的重复计算。
+和内存占用。（并不会分析）待优化。

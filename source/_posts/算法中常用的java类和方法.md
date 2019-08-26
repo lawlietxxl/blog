@@ -38,6 +38,7 @@ String[] strArr = {"张三","李四","王二麻"};
 默认的优先队列，先小后大。自定义需要重写Comparator
 
 ```java
+        PriorityQueue<Integer> queue = new PriorityQueue<>(Collections.reverseOrder());
         PriorityQueue<Integer> priorityQueue = new PriorityQueue<>();
         priorityQueue.offer(3);
         priorityQueue.offer(1);
