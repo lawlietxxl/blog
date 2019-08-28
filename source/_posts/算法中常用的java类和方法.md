@@ -69,8 +69,22 @@ String[] strArr = {"张三","李四","王二麻"};
 # 泛型相关方法
 下面是符合java语法的，int[] 不属于primitive type
 ```java
-List<int[]> a= new ArrayList<>();
-// 排序可以使用lambda，很easy
+    List<int[]> a= new ArrayList<>();
+    // 排序可以使用lambda，很easy
  
-Collections.sort(a, (a1, a2)->Integer.compare(a1[0], a2[0]));
+    Collections.sort(a, (a1, a2)->Integer.compare(a1[0], a2[0]));
+```
+
+# Stack
+```java
+    Stack<Integer> stack = new Stack<>();
+    stack.push(1);
+    stack.pop();
+    stack.peek(); // throw new EmptyStackException();
+```
+
+# StringBuilder
+```java
+    StringBuilder stringBuilder = new StringBuilder();
+    stringBuilder.insert(0, 'c');
 ```
