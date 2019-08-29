@@ -603,7 +603,7 @@ class Solution {
 
 # [621. Task Scheduler](https://leetcode.com/problems/task-scheduler/)
 
-## AFTER FAIL: 41.12 86.76 26mins
+## AFTER FAIL: 41.12 86.76 26mins TODO
 ```java
 class Solution {
     public int leastInterval(char[] tasks, int n) {
@@ -643,3 +643,50 @@ class Solution {
 + 注意几个bugfix细节点
 
 最后的时间只有42，还有优化空间。复杂度是 nlog(n)?
+
+# [15. 3Sum](https://leetcode.com/problems/3sum/)
+## 8.82 41.34 60mins TODO
+```java
+class Solution {
+    public List<List<Integer>> threeSum(int[] nums) {
+        List<List<Integer>> res = new ArrayList<>();
+        Arrays.sort(nums);
+        for(int i = 0; i < nums.length-1; i++) {
+            // duplicate, continue
+            if(i != 0 && nums[i] == nums[i-1]) continue;
+            Map<Integer, List<List<Integer>>> sum2Map = new HashMap<>();
+            Set<Integer> done = new HashSet<>();
+            for(int j = i + 1; j < nums.length; j++){
+                // bugfix
+                // if(j != i + 1 && nums[j] == nums[j-1]) continue;
+                
+                if(done.contains(nums[j])) continue;
+                if(sum2Map.containsKey(-nums[j])){
+                    done.add(nums[j]);
+                    for(List<Integer> l: sum2Map.get(-nums[j])){
+                        l.add(nums[j]);
+                        res.add(l);
+                    }
+                }
+                int sum2 = nums[i] + nums[j];
+                // bugfix
+                if(sum2Map.containsKey(sum2)) continue;
+                if(!sum2Map.containsKey(sum2)) sum2Map.put(sum2, new ArrayList<>());
+                
+                // 注意顺序
+                List<Integer> tmpL = new ArrayList<>();
+                tmpL.add(nums[i]);
+                tmpL.add(nums[j]);
+                sum2Map.get(sum2).add(tmpL);
+            }
+        }
+        return res;
+    }
+}
+```
+
+算法复杂度为 O(n^2)。要点在于排重。我是靠**排序**作为排重手段的。
+**流程**：
++ 先排序，然后O(n^2)遍历
++ 注意i的排重逻辑是判断跟前一个是否一样。
++ 轮询到j的时候，应该先算结果（看看本次ij循环前面，是否包含结果）；再进行sum的排重。

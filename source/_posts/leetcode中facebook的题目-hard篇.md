@@ -204,7 +204,7 @@ class Solution {
 
 # [124. Binary Tree Maximum Path Sum](https://leetcode.com/problems/binary-tree-maximum-path-sum/)
 
-## 5.04 5.95 1h
+## 5.04 5.95 1h TODO
 ```java
 /**
  * Definition for a binary tree node.
@@ -266,3 +266,32 @@ class Solution {
 **todo**：
 + 感觉上有很多复杂计算，需要优化
 + 为什么内存占用会这么大，递归的内存占用分析不会。可以用这道题进行分析
+
+# [42. Trapping Rain Water](https://leetcode.com/problems/trapping-rain-water/) TODO
+FAIL
+## solution 1 98.21 92.47 TODO(多解)
+
+```java
+class Solution {
+    public int trap(int[] height) {
+        if(height.length <= 2) return 0;
+        int[] res = new int[height.length];
+        int max = height[0];
+        for(int i = 0; i < height.length; i++)
+            res[i] = max = Math.max(max, height[i]);
+        max = height[height.length-1];
+        
+        for(int i = 0; i < height.length; i++){
+            max = Math.max(max, height[height.length-1-i]);
+            res[height.length-1-i] = Math.min(res[height.length-1-i], max);
+        }
+        
+        int result = 0;
+        for(int i = 0; i < height.length; i++)
+            result += res[i] - height[i];
+        return result;
+    }
+}
+```
+从左向右，取一次最大值；从右向左，取一次最大值。两者取小的，再进行减法。这算是动态规划的方法。
+
