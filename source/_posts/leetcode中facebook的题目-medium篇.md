@@ -691,9 +691,9 @@ class Solution {
 + 注意i的排重逻辑是判断跟前一个是否一样。
 + 轮询到j的时候，应该先算结果（看看本次ij循环前面，是否包含结果）；再进行sum的排重。
 
-# [133. Clone Graph](https://leetcode.com/problems/clone-graph/)
+# [133. Clone Graph](https://leetcode.com/problems/clone-graph/)(FAIL)
 
-## FAIL
+## 正解
 ```java
 /*
 // Definition for a Node.
