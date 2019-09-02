@@ -690,3 +690,46 @@ class Solution {
 + 先排序，然后O(n^2)遍历
 + 注意i的排重逻辑是判断跟前一个是否一样。
 + 轮询到j的时候，应该先算结果（看看本次ij循环前面，是否包含结果）；再进行sum的排重。
+
+# [133. Clone Graph](https://leetcode.com/problems/clone-graph/)
+
+## FAIL
+```java
+/*
+// Definition for a Node.
+class Node {
+    public int val;
+    public List<Node> neighbors;
+
+    public Node() {}
+
+    public Node(int _val,List<Node> _neighbors) {
+        val = _val;
+        neighbors = _neighbors;
+    }
+};
+*/
+class Solution {
+    public Node cloneGraph(Node node) {
+        Map<Node, Node> cache = new HashMap<>();
+        return clone(node, cache);
+    }
+    
+    private Node clone(Node node, Map<Node, Node> cache) {
+        if(cache.containsKey(node)) return cache.get(node);
+        Node copy = new Node(node.val, new ArrayList<>());
+        cache.put(node, copy);
+        if(node.neighbors == null) return copy;
+        for(Node n: node.neighbors)
+            copy.neighbors.add(clone(n, cache));
+        return copy;
+    }
+}
+
+```
+一开始的思路相当复杂：
+每个无向图相当于有向图，只不过边是双向的而已。之前做个一个类似的“图的复制”题目，记得当时题目的解法是：在每个节点后面加一个哨兵节点，最后把所有的哨兵节点连接起来，就跟之前的图相同。但是我这么做之后，会被判为返回引用，很奇怪。
+
+此题目的正解也十分简单：使用map保留新图和旧图中node的对应关系，使用dfs即可。
+
+**图的复制**一类的题目都可以向上面两个思路靠。后者简单一些。
