@@ -733,3 +733,35 @@ class Solution {
 此题目的正解也十分简单：使用map保留新图和旧图中node的对应关系，使用dfs即可。
 
 **图的复制**一类的题目都可以向上面两个思路靠。后者简单一些。
+
+# [173. Binary Search Tree Iterator](https://leetcode.com/problems/binary-search-tree-iterator/)
+## 18.55 92.59 7mins
+```java
+class BSTIterator {
+    Queue<Integer> q = new LinkedList<>();
+
+    public BSTIterator(TreeNode root) {
+        if(root == null) return;
+        traverse(root);
+    }
+    
+    /** @return the next smallest number */
+    public int next() {
+        return q.poll();
+    }
+    
+    /** @return whether we have a next smallest number */
+    public boolean hasNext() {
+        return !q.isEmpty();
+    }
+    
+    private void traverse(TreeNode root) {
+        if(root == null) return;
+        traverse(root.left);
+        q.offer(root.val);
+        traverse(root.right);
+    }
+}
+```
+
+利用 队列先进先出的特性 + 先序遍历。可以实现。但是时间复杂度较高，TODO 其他解法。TODO

@@ -295,3 +295,37 @@ class Solution {
 ```
 从左向右，取一次最大值；从右向左，取一次最大值。两者取小的，再进行减法。这算是动态规划的方法。
 
+# [340. Longest Substring with At Most K Distinct Characters](https://leetcode.com/problems/longest-substring-with-at-most-k-distinct-characters/)
+
+## 21.84 46.81 30mins
+```java
+class Solution {
+    public int lengthOfLongestSubstringKDistinct(String s, int k) {
+        if(k == 0) return 0;
+        
+        int res = 0;
+        Map<Character, Integer> cache = new HashMap<>();
+        
+        int i = 0, j = 0;
+        while(i < s.length()) {
+            if(j == s.length()) return res;
+            char c = s.charAt(j++);
+            if(!cache.containsKey(c)) cache.put(c, 0);
+            cache.put(c, cache.get(c)+1);
+            // bugfix == -> <=
+            if(cache.size() <= k) res = Math.max(res, j-i);
+            while(cache.size() > k) {
+                char ci = s.charAt(i++);
+                if(cache.get(ci) == 1) cache.remove(ci);
+                else cache.put(ci, cache.get(ci)-1);
+                if(cache.size() == k) res = Math.max(res, j-i);
+            }
+        }
+        return res;
+    }
+}
+```
+
+思路：两个pointer，i，j(excluded)，向右移动。分别计算里面的包含字符串个数 .但是有额外计算，导致时间复杂度较高
+
+# [Shortest Distance from All Buildings](https://leetcode.com/problems/shortest-distance-from-all-buildings/) FAIL

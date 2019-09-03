@@ -88,3 +88,18 @@ String[] strArr = {"张三","李四","王二麻"};
     StringBuilder stringBuilder = new StringBuilder();
     stringBuilder.insert(0, 'c');
 ```
+
+# Integer
+```java
+int a = Integer.MAX_VALUE; // 0x7fffffff
+```
+
+# Queue
+```java
+Queue<Integer> queue = new LinkedList<>();
+queue.offer(1);
+queue.offer(2);
+System.out.println(queue.poll()); // 1
+System.out.println(queue.peek()); // 2
+System.out.println(queue.size()); // 1
+```
