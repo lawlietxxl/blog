@@ -328,4 +328,4 @@ class Solution {
 
 思路：两个pointer，i，j(excluded)，向右移动。分别计算里面的包含字符串个数 .但是有额外计算，导致时间复杂度较高
 
-# [Shortest Distance from All Buildings](https://leetcode.com/problems/shortest-distance-from-all-buildings/) FAIL
+# [317. Shortest Distance from All Buildings](https://leetcode.com/problems/shortest-distance-from-all-buildings/) FAIL
