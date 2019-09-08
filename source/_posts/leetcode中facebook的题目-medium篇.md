@@ -765,3 +765,205 @@ class BSTIterator {
 ```
 
 利用 队列先进先出的特性 + 先序遍历。可以实现。但是时间复杂度较高，TODO 其他解法。TODO
+
+# [161. One Edit Distance](https://leetcode.com/problems/one-edit-distance/)
+## 99.56 100 20mins
+```java
+class Solution {
+    public boolean isOneEditDistance(String s, String t) {
+        if(s.equals(t)) return false;
+        
+        // bugfix: 对于到达length的边界没有控制
+        /**
+        for(int i = 0; i < s.length() && i < t.length(); ++i)
+            if(s.charAt(i) != t.charAt(i)) {
+                s = s.substring(i);
+                t = t.substring(i);
+            }
+        **/
+        int i = 0;
+        while(i < s.length() && i < t.length() && s.charAt(i) == t.charAt(i)) {
+            i++;
+            if(i >= s.length() || i >= t.length()) break;
+        }
+        s = s.substring(i);
+        t = t.substring(i);
+        
+        
+        // insert
+        if(s.length() == t.length()-1 && t.substring(1).equals(s)) return true;
+        // delete
+        if(s.length() == t.length()+1 && s.substring(1).equals(t)) return true;
+        // replace
+        if(s.length() == t.length() && s.substring(1).equals(t.substring(1))) return true;
+        
+        return false;
+    }
+}
+```
+从左到右扫描，遇到不同的一个字分三种情况比对即可.有bug，for循环无法进入到达length的情况
+
+# [211. Add and Search Word - Data structure design](https://leetcode.com/problems/add-and-search-word-data-structure-design/)
+
+## 85.20 81.82 25mins
+```java
+class WordDictionary {
+    private class Node {
+        public Node[] nodes;
+        public boolean end;
+        public Node(){
+            nodes = new Node[26];
+        }
+    }
+    
+    private Node node;
+    
+    /** Initialize your data structure here. */
+    public WordDictionary() {
+        node = new Node();
+    }
+    
+    /** Adds a word into the data structure. */
+    public void addWord(String word) {
+        Node sentinel = node;
+        for(char c: word.toCharArray()) {
+            if(sentinel.nodes[c-'a'] == null) sentinel.nodes[c-'a'] = new Node();
+            sentinel = sentinel.nodes[c-'a'];
+        }
+        sentinel.end = true;
+    }
+    
+    /** Returns if the word is in the data structure. A word could contain the dot character '.' to represent any one letter. */
+    public boolean search(String word) {
+        return search(word, node);
+    }
+    
+    private boolean search(String word, Node node) {
+        Node sentinel = node;
+        for(int i = 0; i < word.length(); i++){
+            char c = word.charAt(i);
+            if(c != '.')
+                if(sentinel.nodes[c-'a'] == null) return false;
+                else sentinel = sentinel.nodes[c-'a'];
+            else {
+                // bugfix boolean allNull = true;
+                for(Node n: sentinel.nodes)
+                    if(n != null) {
+                        // bugfix allNull = false;
+                        if(search(word.substring(i+1), n)) return true;
+                    }
+                // bugfix if(allNull) return false;
+                return false;
+            }
+        }
+        return sentinel.end;
+    }
+}
+
+/**
+ * Your WordDictionary object will be instantiated and called as such:
+ * WordDictionary obj = new WordDictionary();
+ * obj.addWord(word);
+ * boolean param_2 = obj.search(word);
+ */
+```
+经典的字典树，与之前思路不一样的是，之前我一直使用数组，而本次使用了根节点。对于空串的判断方便了很多。作为例子记住。
+另外存在一个bug：不存在那个bool判断，请注意。
+
+# [304. Range Sum Query 2D - Immutable](https://leetcode.com/problems/range-sum-query-2d-immutable/)
+
+## 43.84 100.00 20mins
+```java
+class NumMatrix {
+    private int[][] sum;
+
+    public NumMatrix(int[][] matrix) {
+        if(matrix.length == 0 || matrix[0].length == 0) return;
+        
+        
+        sum = new int[matrix.length+1][matrix[0].length+1];
+        
+        sum[1][1] = matrix[0][0];
+        for(int i = 1; i < matrix[0].length; i++)
+            sum[1][i+1] = matrix[0][i] + sum[1][i];
+        for(int i = 1; i < matrix.length; i++)
+            sum[i+1][1] = matrix[i][0] + sum[i][1];
+        for(int i = 1; i < matrix.length; i++)
+            for(int j = 1; j < matrix[i].length; j++)
+                sum[i+1][j+1] = matrix[i][j] + sum[i][j+1] + sum[i+1][j] - sum[i][j];
+    }
+    
+    public int sumRegion(int row1, int col1, int row2, int col2) {
+        return sum[row2+1][col2+1] + sum[row1][col1] - sum[row1][col2+1] - sum[row2+1][col1];
+    }
+}
+
+/**
+ * Your NumMatrix object will be instantiated and called as such:
+ * NumMatrix obj = new NumMatrix(matrix);
+ * int param_1 = obj.sumRegion(row1,col1,row2,col2);
+ */
+```
+
+不可变的二维数组，求和。比较常规。较为普通写法改进的是，新建空间的时候多建了一行，这样在计算的时候就不需要判断0了。
+
+# [311. Sparse Matrix Multiplication](https://leetcode.com/problems/sparse-matrix-multiplication/)
+
+## 25.55 100.00 6mins
+```java
+class Solution {
+    public int[][] multiply(int[][] A, int[][] B) {
+        int[][] res = new int[A.length][B[0].length];
+        for(int i = 0; i < res.length; i++)
+            for(int j = 0; j < res[0].length; j++) {
+                int n = 0;
+                for(int ind = 0; ind < A[i].length; ind++)
+                    n += A[i][ind] * B[ind][j];
+                res[i][j] = n;
+            }
+        return res;
+    }
+}
+```
+不考虑稀疏矩阵，时间排名为25，后面针对这一点进行优化。
+
+## 44.08 100.00 
+```java
+class Solution {
+    public int[][] multiply(int[][] A, int[][] B) {
+        Map<Integer, Set<Integer>> aData = new HashMap<>();
+        Map<Integer, Set<Integer>> bData = new HashMap<>();
+        for(int i = 0; i < A.length; i++)
+            for(int j = 0; j < A[0].length; j++)
+                if(A[i][j] != 0) {
+                    if(!aData.containsKey(j)) aData.put(j, new HashSet<>());
+                    aData.get(j).add(i);
+                }
+        for(int i = 0; i < B.length; i++)
+            for(int j = 0; j < B[0].length; j++)
+                if(B[i][j] != 0) {
+                    if(!bData.containsKey(i)) bData.put(i, new HashSet<>());
+                    bData.get(i).add(j);
+                }
+        
+        
+        int[][] res = new int[A.length][B[0].length];
+        //for(Integer i: aData.keySet())
+            // bugfix 这样只算了中轴线上的点
+            //if(bData.containsKey(i))
+                //for(Integer j: aData.get(i))
+                    //if(bData.get(i).contains(j))
+                        //res[i][j] += A[i][j] * B[j][i];
+        for(Integer j: aData.keySet())
+            for(Integer i: aData.get(j))
+                if(bData.containsKey(j))
+                    for(Integer jj: bData.get(j))
+                        // bugfix res[i][jj] += A[i][j]*B[i][jj]
+                        res[i][jj] += A[i][j]*B[j][jj];
+                        
+        return res;
+    }
+    
+}
+```
+用两个map存储稀疏图的数据。然后做处理。注意最后计算的时候的坐标，很难想，绕不过来

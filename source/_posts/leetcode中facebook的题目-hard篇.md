@@ -329,3 +329,129 @@ class Solution {
 思路：两个pointer，i，j(excluded)，向右移动。分别计算里面的包含字符串个数 .但是有额外计算，导致时间复杂度较高
 
 # [317. Shortest Distance from All Buildings](https://leetcode.com/problems/shortest-distance-from-all-buildings/) FAIL
+
+# [76. Minimum Window Substring](https://leetcode.com/problems/minimum-window-substring/)
+## 5.01 5.32 38mins
+```java
+// 漏掉了几种testcase
+// "a" "a"
+// "a" "aa"  没考虑到这种testcase 原理上就错了 
+class Solution {
+    public String minWindow(String s, String t) {
+        Map<Character, Integer> set = new HashMap<>();
+        for(char c: t.toCharArray()) {
+            if(!set.containsKey(c)) set.put(c, 0);
+            set.put(c, set.get(c)+1);
+        }
+    
+        
+        Map<Character, Integer> map = new HashMap<>();
+        Queue<Integer> q = new LinkedList<>();
+        
+        String res = "";
+        
+        for(int i = 0; i < s.length(); ++i)
+            if(set.containsKey(s.charAt(i))) {
+                if(!map.containsKey(s.charAt(i))) map.put(s.charAt(i), 0);
+                map.put(s.charAt(i), map.get(s.charAt(i)) + 1);
+                // bugfix
+                q.offer(i);
+                
+                // bugfix while(map.equals(set) && q.size() != 0) {
+                // bugfix while(map.keySet().size() == set.keySet().size() && q.size() != 0) {
+                while(mapContains(map, set) && q.size() != 0) {
+                    int start = q.poll();
+                    if(res.length() == 0) res = s.substring(start, i+1);
+                    else res = res.length() < s.substring(start, i+1).length() ? res : s.substring(start, i+1);
+                    map.put(s.charAt(start), map.get(s.charAt(start)) - 1);
+                    if(map.get(s.charAt(start)) == 0) map.remove(s.charAt(start));
+                }
+                // bugfix q.offer(i);
+            }
+        return res;
+    }
+    
+    private boolean mapContains(Map<Character, Integer> m1, Map<Character, Integer> m2) {
+        if(m1.size() == m2.size()) {
+            for(Character c: m1.keySet())
+                if(m1.get(c) < m2.get(c)) return false;
+        } else return false;
+        return true;
+    }
+}
+```
+思路：
++ 从左向右扫描，记录每个可能点的位置。
++ 注意几个testcase，待优化
+
+# [269. Alien Dictionary](https://leetcode.com/problems/alien-dictionary/) FAIL
+这里遇到一个之前没了解过的知识点，[拓扑排序/Topological sorting](https://en.wikipedia.org/wiki/Topological_sorting#Kahn's_algorithm)，拓扑排序分为两种，BFS和DFS。待学习和写算法。
+
+# [282. Expression Add Operators](https://leetcode.com/problems/expression-add-operators/) FAIL
+有个问题：DFS和BACKTRACKING 到底有什么区别?
+
+# [297. Serialize and Deserialize Binary Tree](https://leetcode.com/problems/serialize-and-deserialize-binary-tree/)
+
+## 42.59 54.28 20mins TODO(DFS BFS?)
+```java
+/**
+ * Definition for a binary tree node.
+ * public class TreeNode {
+ *     int val;
+ *     TreeNode left;
+ *     TreeNode right;
+ *     TreeNode(int x) { val = x; }
+ * }
+ */
+public class Codec {
+
+    // Encodes a tree to a single string.
+    public String serialize(TreeNode root) {
+        StringBuilder sb = new StringBuilder();
+        Queue<TreeNode> q = new LinkedList<TreeNode>();
+        q.offer(root);
+        while(q.size() != 0) {
+            TreeNode node = q.poll();
+            if(node != null) {
+                sb.append(node.val).append(" ");
+                q.offer(node.left);
+                q.offer(node.right);
+            }
+            else sb.append("null").append(" ");
+        }
+        return sb.substring(0, sb.length()-1);
+    }
+
+    // Decodes your encoded data to tree.
+    public TreeNode deserialize(String data) {
+        String[] vals = data.split(" ");
+        Queue<TreeNode> q = new LinkedList<>();
+        TreeNode res;
+        if(vals[0].equals("null")) return null;
+        else res = new TreeNode(Integer.valueOf(vals[0]));
+        q.offer(res);
+        for(int i = 1; i < vals.length; i++) {
+            TreeNode n;
+            if(vals[i].equals("null")) n = null;
+            else n = new TreeNode(Integer.valueOf(vals[i]));
+            
+            TreeNode node = q.poll();
+            node.left = n;
+            if(n != null) q.offer(n);
+            
+            if(vals[++i].equals("null")) n = null;
+            else n = new TreeNode(Integer.valueOf(vals[i]));
+            
+            node.right = n;
+            if(n != null) q.offer(n);
+        }
+        return res;
+    }
+}
+
+// Your Codec object will be instantiated and called as such:
+// Codec codec = new Codec();
+// codec.deserialize(codec.serialize(root));
+```
+
+实现了类似leetcode的方式：\[1,2,3,null,null,4,5\] 但是时间和空间复杂度是50%左右。待优化。
