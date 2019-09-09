@@ -967,3 +967,126 @@ class Solution {
 }
 ```
 用两个map存储稀疏图的数据。然后做处理。注意最后计算的时候的坐标，很难想，绕不过来
+
+# [438. Find All Anagrams in a String](https://leetcode.com/problems/find-all-anagrams-in-a-string/)
+
+## 22.89 88.00 TODO
+```java
+class Solution {
+    public List<Integer> findAnagrams(String s, String p) {
+        Map<Character, Integer> pattern = new HashMap<>();
+        Map<Character, Integer> cache = new HashMap<>();
+        
+        List<Integer> res = new ArrayList<>();
+        if(s == null || s.length() < p.length()) return res;
+        
+        // make pattern
+        for(char c: p.toCharArray()) {
+            if(!pattern.containsKey(c)) pattern.put(c, 0);
+            pattern.put(c, pattern.get(c)+1);
+        }
+        
+        // make first p length chars
+        int i = 0;
+        for(;i<p.length();i++) {
+            if(!cache.containsKey(s.charAt(i))) cache.put(s.charAt(i), 0);
+            cache.put(s.charAt(i), cache.get(s.charAt(i)) + 1);
+        }
+        // iteration
+        for(;i<s.length();i++) {
+            // bugfix pattern.equals(cache)
+            if(mapEquals(pattern, cache)) res.add(i-p.length());
+            if(!cache.containsKey(s.charAt(i))) cache.put(s.charAt(i), 0);
+            cache.put(s.charAt(i), cache.get(s.charAt(i)) + 1);
+            cache.put(s.charAt(i-p.length()), cache.get(s.charAt(i-p.length())) - 1);
+        }
+        
+        if(mapEquals(pattern, cache)) res.add(i-p.length());
+        
+        return res;
+    }
+    
+    private boolean mapEquals(Map<Character, Integer> m1, Map<Character, Integer> m2) {
+        return mapEqualsInner(m1, m2) && mapEqualsInner(m2, m1);
+    }
+    
+    private boolean mapEqualsInner(Map<Character, Integer> m1, Map<Character, Integer> m2) {
+        for(Character c: m1.keySet())
+            if(m1.get(c) != 0)
+                if(!m1.get(c).equals(m2.get(c)))
+                    return false;
+        return true;
+    }
+}
+```
+
+思路比较常规，一个指针从头到位即可。但是待优化。
+
+# [426. Convert Binary Search Tree to Sorted Doubly Linked List](https://leetcode.com/problems/convert-binary-search-tree-to-sorted-doubly-linked-list/)
+
+## 100.00 6.90 18mins TODO
+```java
+/*
+// Definition for a Node.
+class Node {
+    public int val;
+    public Node left;
+    public Node right;
+
+    public Node() {}
+
+    public Node(int _val,Node _left,Node _right) {
+        val = _val;
+        left = _left;
+        right = _right;
+    }
+};
+*/
+class Solution {
+    public Node treeToDoublyList(Node root) {
+        if(root == null) return null;
+        Node[] nodes = trans(root);
+        return nodes[0];
+    }
+    
+    private Node[] trans(Node root) {
+        if(root == null) return null;
+        if(root.left == null && root.right == null) {
+            root.right = root;
+            root.left = root;
+            return new Node[]{root, root};
+        }
+        if(root.left == null) {
+            Node[] nodes = trans(root.right);
+            root.right = nodes[0];
+            nodes[1].right = root;
+            root.left = nodes[1];
+            nodes[0].left = root;
+            return new Node[]{root, nodes[1]};
+        }
+        if(root.right == null) {
+            Node[] nodes = trans(root.left);
+            nodes[1].right = root;
+            root.right = nodes[0];
+            root.left = nodes[1];
+            nodes[0].left = root;
+            return new Node[]{nodes[0], root};
+        }
+        
+        Node[] nodes0 = trans(root.left);
+        Node[] nodes1 = trans(root.right);
+        
+        nodes0[1].right = root;
+        root.right = nodes1[0];
+        nodes1[1].right = nodes0[0];
+        
+        root.left = nodes0[1];
+        nodes0[0].left = nodes1[1];
+        nodes1[0].left = root;
+        
+        return new Node[]{nodes0[0], nodes1[1]};
+    }
+}
+```
+
+思路：divide and conquer。分治法的经典应用。使用子树的结果，拼成总体的结果即可。但是空间复杂度很高。待优化
