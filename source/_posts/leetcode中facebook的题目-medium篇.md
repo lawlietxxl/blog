@@ -1090,3 +1090,60 @@ class Solution {
 ```
 
 思路：divide and conquer。分治法的经典应用。使用子树的结果，拼成总体的结果即可。但是空间复杂度很高。待优化
+
+# [670. Maximum Swap](https://leetcode.com/problems/maximum-swap/)
+
+## FAIL
+```java
+class Solution {
+    // bugfix: testcase 122 -> 221 not 212
+    public int maximumSwap(int num) {
+        int res = num;
+        int i = 0, j = 0, nj = 0, ni = 0, iter = 0;
+        while(num != 0) {
+            // find i j
+            int current = num % 10;
+            num /= 10;
+            if(num == 0) break;
+            int next = num % 10;
+            
+            if(current > next) {
+                i = iter+1;
+                ni = next;
+                if(current > nj) {
+                    nj = current;
+                    j = iter;
+                }
+            }
+            // bugfix
+            else if (current == next) {
+                
+            } else {
+                
+            }
+            
+            iter ++;
+        }
+        
+        res -= ni * tens(i);
+        
+        res -= nj * tens(j);
+        
+        res += ni * tens(j);
+        res += nj * tens(i);
+        return res;
+    }
+    
+    private int tens(int i) {
+        if(i == 0) return 1;
+        int res = 1;
+        for(int t = 0; t < i; t++) res *= 10;
+        return res;
+    }
+    
+}
+```
+
+思路：
++ 寻找从右向左的递减的序列，找峰值，但是要考虑相等的值的情况。
++ 想起来十分复杂，不易实现。可以优化为答案的贪心算法。
