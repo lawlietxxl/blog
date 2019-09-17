@@ -1147,3 +1147,108 @@ class Solution {
 思路：
 + 寻找从右向左的递减的序列，找峰值，但是要考虑相等的值的情况。
 + 想起来十分复杂，不易实现。可以优化为答案的贪心算法。
+
+# [34. Find First and Last Position of Element in Sorted Array](https://leetcode.com/problems/find-first-and-last-position-of-element-in-sorted-array/)
+
+## 100 97.16 25mins
+```java
+class Solution {
+    public int[] searchRange(int[] nums, int target) {
+        int[] res = new int[]{-1, -1};
+        if(nums == null || nums.length == 0) return res;
+        // l r included
+        int l = 0, r = nums.length-1;
+        while(l < r) {
+            int mid = l + (r-l)/2;
+            if(nums[mid] > target) {
+                r = mid-1;
+            } else if(nums[mid] < target) {
+                l = mid+1;
+            } else {
+                res[0] = first(nums, target, l, mid);
+                res[1] =  last(nums, target, mid, r);
+                return res;
+            }
+        }
+        // l = r
+        if(nums[l] == target) {
+            res[0] = res[1] = l;
+            return res;
+        } else {
+            return res;
+        }
+    }
+    
+    // must have
+    private int first(int[] nums, int target, int l, int r) {
+        while(l < r) {
+            int mid = l + (r-l)/2;
+            if(nums[mid] == target) r = mid;
+            else l = mid+1;
+        }
+        return l;
+    }
+    
+    private int last(int[] nums, int target, int l, int r) {
+        while(l < r) {
+            int mid = l + (r-l)/2;
+            if(nums[mid] == target) {
+                //bugfix
+                if(l == mid) {
+                    return nums[r] == target ? r : l;
+                }
+                else l = mid;
+            }
+            else r = mid-1;
+        }
+        return l;
+    }
+}
+```
+
+思路：
++ 二分查找为了好让循环停止，所以使用**包含**边界的写法。这样只要写<就可以了。
++ 又写出了一个死循环bug。因为 写法是 mid = l+(l-r)/2，边界以左边界作为基准移动。所以在移动左边界的时候，其实跟右边界是不对等的。所以要判断一下移动左边界的特殊情况。
+
+# [721. Accounts Merge](https://leetcode.com/problems/accounts-merge/)
+
+## FAIL
++ 这其实是图问题
++ 一个Account就是一个图，一个mail是一个点，就看点和点之间是否存在边
++ 如果是图，可以使用dfs。TODO
++ 可以使用并查集进行数据的处理，但是没有抽象成数据模型。
+
+## 并查集
+
+# [785. Is Graph Bipartite?](https://leetcode.com/problems/is-graph-bipartite/)
+## 32.82 63.42 29mins TODO
+```java
+class Solution {
+    public boolean isBipartite(int[][] graph) {
+        Set<Integer> a = new HashSet<>();
+        Set<Integer> b = new HashSet<>();
+        
+        Set<Integer> done = new HashSet<>();
+        
+        for(int i = 0; i < graph.length; i++) {
+            if(done.contains(i)) continue;
+            if(!dfs(graph, i, a, b, done)) return false;
+        }
+        return true;
+    }
+    
+    private boolean dfs(int[][] graph, int v, Set<Integer> a, Set<Integer> b, Set<Integer> done) {
+        if(a.contains(v)) return true;
+        a.add(v);
+        for(int u: graph[v]) {
+            if(a.contains(u)) return false;
+            if(!dfs(graph, u, b, a, done)) return false;
+        }
+        done.add(v);
+        return true;
+    }
+}
+```
+
+思路：
+使用dfs，从一个点出发，依次用set标记剩下的点。除非某点存在边位于同一个set中。否则即为二分图

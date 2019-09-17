@@ -30,6 +30,10 @@ intArr = new int[]{1,2,3,4,5,9};
 int[] price = new int[4];
 // 3 简化的静态初始化
 String[] strArr = {"张三","李四","王二麻"};
+// 4 多维数组变长
+int[][] a = new int[10][];
+a[0] = new int[5];
+a[1] = new int[7];
 
 ```
 
@@ -102,4 +106,11 @@ queue.offer(2);
 System.out.println(queue.poll()); // 1
 System.out.println(queue.peek()); // 2
 System.out.println(queue.size()); // 1
+```
+
+# List
+```java
+List<String> l = new ArrayList<>();
+l.add(0, "abc");
+String s = l.remove(0);
 ```
