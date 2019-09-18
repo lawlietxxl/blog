@@ -1252,3 +1252,58 @@ class Solution {
 
 思路：
 使用dfs，从一个点出发，依次用set标记剩下的点。除非某点存在边位于同一个set中。否则即为二分图
+
+# [958. Check Completeness of a Binary Tree](https://leetcode.com/problems/check-completeness-of-a-binary-tree/)
+
+## 11.74 100.00 50mins
+```java
+/**
+ * Definition for a binary tree node.
+ * public class TreeNode {
+ *     int val;
+ *     TreeNode left;
+ *     TreeNode right;
+ *     TreeNode(int x) { val = x; }
+ * }
+ */
+class Solution {
+    public boolean isCompleteTree(TreeNode root) {
+        return checkRecord(root).height >= 0;
+    }
+    
+    Record checkRecord(TreeNode root) {
+        if(root == null) return new Record(true, 0);
+        Record l = checkRecord(root.left);
+        Record r = checkRecord(root.right);
+        
+        if(l.height == -1 || r.height == -1) return new Record(false, -1);
+        if(l.full && r.full)
+            if(l.height - r.height == 0) return new Record(true, l.height+1);
+            else if(l.height - r.height == 1) return new Record(false, l.height+1);
+            else return new Record(false, -1);
+        else if(l.full && !r.full) 
+            if(l.height == r.height) return new Record(false, l.height+1);
+            else return new Record(false, -1);
+        else if(!l.full && r.full)
+            if(l.height-r.height==1) return new Record(false, l.height+1);
+            else return new Record(false, -1);
+        else return new Record(false, -1);
+    }
+    
+    
+    class Record {
+        Record(boolean full, int height) {
+            this.full = full;
+            this.height = height;
+        }
+        
+        boolean full;
+        int height;
+    }
+}
+```
+
+需要一次返回两个数据：是否是满的二叉树 + 最大深度
+分情况进行分析即可。
+可以看出时间复杂度较高，但是空间复杂度不错。
+TODO: bfs

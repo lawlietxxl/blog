@@ -7,6 +7,22 @@ date: 2019-08-16 22:48:22
 ---
 有一些方法和类在算法中经常使用，总结一下，方便复习。
 <!--more-->
+# 搜索
+java 内置binarySearch
+```java
+        int[] a = new int[]{1,2,3,4,5,6};
+        System.out.println(Arrays.binarySearch(a, 3)); // 2
+        System.out.println(Arrays.binarySearch(a, 7)); // -7 //-length
+
+        List<Integer> b = new ArrayList<>();
+        b.add(1);
+        b.add(2);
+        b.add(3);
+        System.out.println(Collections.binarySearch(b, 2)); // 1
+        System.out.println(Collections.binarySearch(b, 200)); // -4
+```
+
+
 # 排序
 ```java
 List<Object> l = new ArrayList<>();
@@ -113,4 +129,11 @@ System.out.println(queue.size()); // 1
 List<String> l = new ArrayList<>();
 l.add(0, "abc");
 String s = l.remove(0);
+```
+
+# Map
+```java
+    // 简单的写法，可以省略，if(map.containsKey(....))，简化很多
+        Map<Integer, List<Integer>> map = new HashMap<>();
+        map.computeIfAbsent(1, x->new ArrayList<>()).add(1); // 1:1
 ```
