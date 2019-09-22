@@ -1307,3 +1307,30 @@ class Solution {
 分情况进行分析即可。
 可以看出时间复杂度较高，但是空间复杂度不错。
 TODO: bfs
+
+# [523. Continuous Subarray Sum](https://leetcode.com/problems/continuous-subarray-sum/)
+
+## 26.60 88.24 19mins
+```java
+class Solution {
+    public boolean checkSubarraySum(int[] nums, int k) {
+        // bugfix k = 0;
+        if(nums.length <= 1) return false;
+        int[] sums = new int[nums.length+1];
+        sums[0] = 0;
+        for(int i = 1; i < sums.length; i++)
+            sums[i] = nums[i-1] + sums[i-1];
+        //for(int s : sums)
+            //System.out.println(s);
+        for(int i = 0; i < sums.length-2; i++)
+            for(int j = i+2; j < sums.length; j++)
+                if(k == 0 && sums[j] - sums[i] == 0)
+                    return true;
+                else if(k != 0 && (sums[j] - sums[i]) % k == 0)
+                    return true;
+        return false;
+    }
+}
+```
+
+时间复杂度为 $O(n^2)$
