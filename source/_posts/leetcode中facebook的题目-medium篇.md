@@ -4,6 +4,7 @@ tags: []
 categories: []
 keywords: []
 date: 2019-08-15 23:34:31
+mathjax: true
 ---
 同上。
 <!--more-->
