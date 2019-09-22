@@ -4,6 +4,7 @@ tags: []
 categories: []
 keywords: []
 date: 2019-08-15 23:34:39
+mathjax: true
 ---
 同上。
 <!--more-->
@@ -455,3 +456,66 @@ public class Codec {
 ```
 
 实现了类似leetcode的方式：\[1,2,3,null,null,4,5\] 但是时间和空间复杂度是50%左右。待优化。
+# [273. Integer to English Words](https://leetcode.com/problems/integer-to-english-words/)
+## 17.43 100.00 29mins
+```java
+class Solution {
+    String[] dig = new String[]{"", "One", "Two", "Three", "Four", 
+                               "Five", "Six", "Seven", "Eight", "Nine"};
+    String[] dig2 = new String[] {"Ten", "Eleven", "Twelve", "Thirteen", "Fourteen", 
+                                 "Fifteen", "Sixteen", "Seventeen", "Eighteen", "Nineteen"};
+    String[] tens = new String[]{"", "", "Twenty", "Thirty", "Forty", "Fifty", "Sixty", 
+                                "Seventy", "Eighty", "Ninety"};
+    String[] unit = new String[]{"", "Thousand", "Million", "Billion"};
+    
+    //101-119
+    // bugfix case: 0
+    public String numberToWords(int num) {
+        if(num == 0) return "Zero";
+        
+        Stack<String> stack = new Stack<>();
+        int iter = 0;
+        while(num != 0) {
+            int mod = num % 1000;
+            // bugfix
+            if(mod == 0) {
+                num /= 1000;
+                iter++;
+                continue;
+            }
+            stack.push(unit[iter]);
+            
+            int last2 = mod%100;
+            if(last2 != 0) {
+                if(last2 < 10) stack.push(dig[last2]);
+                else if(last2 < 20) stack.push(dig2[last2-10]);
+                else {
+                    int ten = last2/10;
+                    int one = last2%10;
+                    if(one != 0) stack.push(dig[one]);
+                    stack.push(tens[ten]);
+                }
+            }
+            int first1 = mod/100;
+            if(first1 != 0) {
+                stack.push("Hundred");
+                stack.push(dig[first1]);
+            }
+            
+            num /= 1000;
+            iter++;
+        }
+        
+        StringBuilder sb = new StringBuilder();
+        while(stack.size() != 0) {
+            if(stack.peek().equals("")) {
+                stack.pop();
+                continue;
+            }
+            sb.append(stack.pop()).append(" ");
+        }
+        return sb.substring(0, sb.length()-1).toString();
+    }
+}
+```
+每三位处理一次，注意处理0和空值，注意空格。准备数据材料的时候，注意多种情况。

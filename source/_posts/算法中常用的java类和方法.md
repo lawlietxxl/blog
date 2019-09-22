@@ -105,8 +105,10 @@ a[1] = new int[7];
 
 # StringBuilder
 ```java
-    StringBuilder stringBuilder = new StringBuilder();
-    stringBuilder.insert(0, 'c');
+    StringBuilder sb = new StringBuilder();
+    sb.append("234");
+    sb.insert(0, "1");
+    System.out.println(sb.toString());
 ```
 
 # Integer

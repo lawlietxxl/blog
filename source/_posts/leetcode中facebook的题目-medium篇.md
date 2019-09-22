@@ -1219,7 +1219,70 @@ class Solution {
 + 如果是图，可以使用dfs。TODO
 + 可以使用并查集进行数据的处理，但是没有抽象成数据模型。
 
-## 并查集
+## 并查集 60mins
+```java
+class Solution {
+    public List<List<String>> accountsMerge(List<List<String>> accounts) {
+        Map<String, Integer> mail2Id = new HashMap<>();
+        Map<Integer, String> id2Name = new HashMap<>();
+        
+        DSU dsu = new DSU();
+        
+        int[] id = new int[1];
+        for(List<String> l: accounts)
+            for(int i = 1; i < l.size(); i++) {
+                String mail = l.get(i);
+                // must be final
+                int mailId = mail2Id.computeIfAbsent(mail, x->id[0]++);
+                if(i > 1) {
+                    String lastMail = l.get(i-1);
+                    int lastId = mail2Id.get(lastMail);
+                    dsu.union(lastId, mailId);
+                }
+                id2Name.put(mailId, l.get(0));
+            }
+        
+        Map<Integer, List<String>> id2Account = new HashMap<>();
+        for(Map.Entry<String, Integer> entry: mail2Id.entrySet()) {
+            int p = dsu.find(entry.getValue());
+            id2Account.computeIfAbsent(p, x->new LinkedList<>()).add(entry.getKey());
+        }
+        
+        List<List<String>> res = new ArrayList<>();
+        for(Map.Entry<Integer, List<String>> entry: id2Account.entrySet()) {
+            String name = id2Name.get(entry.getKey());
+            Collections.sort(entry.getValue());
+            entry.getValue().add(0, name);
+            res.add(entry.getValue());
+        }
+        
+        return res;
+    }
+    
+    class DSU {
+        int[] parent;
+        public DSU() {
+            parent = new int[10001];
+            for (int i = 0; i <= 10000; ++i)
+                parent[i] = i;
+        }
+        public int find(int x) {
+            if (parent[x] != x) parent[x] = find(parent[x]);
+            return parent[x];
+        }
+        // x <- y
+        public void union(int x, int y) {
+            parent[find(y)] = find(x);
+        }
+    }
+}
+```
+
+已有思路的情况下，用的时间还是比较慢的。注意DSU的写法，牢记。
+时间复杂度是30，并不是最佳。TODO
+思路：
++ 每个list 两两union
++ 遍历mail表，寻找每个的根节点，生成结果。
 
 # [785. Is Graph Bipartite?](https://leetcode.com/problems/is-graph-bipartite/)
 ## 32.82 63.42 29mins TODO
@@ -1335,3 +1398,185 @@ class Solution {
 ```
 
 时间复杂度为 $O(n^2)$
+
+## hashMap 做法
+```java
+class Solution {
+    public boolean checkSubarraySum(int[] nums, int k) {
+        Map<Integer, Integer> map = new HashMap<>();
+        map.put(0, -1);
+        int runningSum = 0;
+        for(int i = 0; i < nums.length; i++) {
+            runningSum += nums[i];
+            if( k != 0) runningSum %= k;
+            if(map.containsKey(runningSum) && i-map.get(runningSum) > 1) return true;
+            else if(!map.containsKey(runningSum)) map.put(runningSum, i);
+        }
+        return false;
+    }
+}
+```
+
+利用取mod的方式可以把时间复杂度降为$O(n)$。
+思路：
++ 仍然取sum，只不过这次是取 $sum\%k$
++ 如果有两个点，sum一样，则这两个点中间的和可以被k整除。
+
+# [1027. Longest Arithmetic Sequence](https://leetcode.com/problems/longest-arithmetic-sequence/)
+## 5.08 100.00 60mins
+```java
+class Solution {
+    Map<Integer, Set<Integer>> done = new HashMap<>();
+    
+    public int longestArithSeqLength(int[] A) {
+        if(A.length <= 2) return A.length;
+        int res = 2;
+        for(int i = 0; i < A.length-1; i++)
+            for(int j = i+1; j < A.length; j++)
+                res = Math.max(res, dfs(A, i, j, 0));
+        return res;
+    }
+    
+    // length former length
+    private int dfs(int[] A, int i, int j, int length) {
+        int diff = A[j] - A[i];
+        //done has bug
+        //if(done.computeIfAbsent(A[j], x->new HashSet<>()).contains(diff)) return -1;
+        int res = 2;
+        for(int k = j+1; k < A.length; k++) {
+            if(A[k] - A[j] == diff) {
+                res = Math.max(res, 1 + dfs(A, j, k, 1));
+            }
+        }
+        //done.get(A[j]).add(diff);
+        return res;
+    }
+}
+```
+
+注意dfs的时候，length是formerlength。但是这个赶紧代码不优雅，需要看看别人怎么写的 TODO
+时间复杂度较高，因为有很多重复计算。需要有个方式记录做过的dfs. TODO
+注释的写法有bug：TODO
+
+# [825. Friends Of Appropriate Ages](https://leetcode.com/problems/friends-of-appropriate-ages/)
+
+## TLE 9mins
+```java
+class Solution {
+    public int numFriendRequests(int[] ages) {
+        if(ages.length < 2) return 0;
+        int res = 0;
+        for(int a = 0; a < ages.length-1; a++)
+            for(int b = a+1; b<ages.length; b++)
+            {
+                int aa = ages[a], ab = ages[b];
+                if(!(ab<=0.5*aa+7 || ab > aa || (ab>100&&aa<100))) res++;
+                int tmp = aa;
+                aa = ab;
+                ab  =tmp;
+                if(!(ab<=0.5*aa+7 || ab > aa || (ab>100&&aa<100))) res++;
+            }
+        return res;
+    }
+}
+```
+
+$O(n^2)$ TLE 了。
+
+思路：可以以age作为key，这样的话复杂度会降低到 $O(k^2)$ k为age种类
+
+# [314. Binary Tree Vertical Order Traversal](https://leetcode.com/problems/binary-tree-vertical-order-traversal/)
+
+## WRONG ANSWER 
+```java
+/**
+ * Definition for a binary tree node.
+ * public class TreeNode {
+ *     int val;
+ *     TreeNode left;
+ *     TreeNode right;
+ *     TreeNode(int x) { val = x; }
+ * }
+ */
+class Solution {
+    public List<List<Integer>> verticalOrder(TreeNode root) {
+        List<List<Integer>> res = new LinkedList<>();
+        if(root == null) return res;
+        
+        Map<Integer, List<Integer>> map = new HashMap<>();
+        int leftest = traveral(root, 0, map);
+        while(true) {
+            List<Integer> l = map.get(leftest++);
+            if(l == null) break;
+            res.add(l);
+        }
+        return res;
+    }
+    
+    // root != null
+    int traveral(TreeNode root, int current, Map<Integer, List<Integer>> map) {
+        List<Integer> l = map.computeIfAbsent(current, x->new ArrayList<>());
+        l.add(root.val);
+        int res = current;
+        if(root.left != null)
+            res = traveral(root.left, current-1, map);
+        if(root.right != null)
+            res = Math.min(res, traveral(root.right, current+1, map));
+        return res;
+    }
+}
+```
+由于这个题目要求顺序是**从左到右，从上到下**，上面的代码可以做到从左到右，但是无法做到从上到下。（因为是先遍历左子树，后遍历右子树），需要进行修改，让代码可以记住**从上到下**
+所以DFS无法完成这个任务。
+我们需要BFS。
+
+## BFS 7.02 100.00
+```java
+/**
+ * Definition for a binary tree node.
+ * public class TreeNode {
+ *     int val;
+ *     TreeNode left;
+ *     TreeNode right;
+ *     TreeNode(int x) { val = x; }
+ * }
+ */
+class Solution {
+    public List<List<Integer>> verticalOrder(TreeNode root) {
+        List<List<Integer>> res = new ArrayList<>();
+        if(root == null) return res;
+        
+        Map<Integer, List<Integer>> map = new HashMap<>();
+        int min = 0;
+        
+        Queue<TreeNode> nodes = new LinkedList<>();
+        Queue<Integer> cols = new LinkedList<>();
+        
+        nodes.offer(root);
+        cols.offer(0);
+        
+        while(nodes.size() != 0) {
+            TreeNode node = nodes.poll();
+            int col = cols.poll();
+            map.computeIfAbsent(col, x->new ArrayList<>()).add(node.val);
+            if(node.left != null) {
+                nodes.offer(node.left);
+                cols.offer(col-1);
+                min = Math.min(min, col-1);
+            }
+            if(node.right != null) {
+                nodes.offer(node.right);
+                cols.offer(col+1);
+            }
+        }
+        while(true) {
+            List<Integer> l = map.get(min++);
+            if(l == null) break;
+            res.add(l);
+        }
+        return res;
+    }
+}
+```
+本来我的思路是，新建一个类，这个类包含col和val，但是看别人的做法，是**新建两个一样的数据结构存着两个值**，这样肯定比新建数据结构效率要高的。
+但是时间复杂度仍然不是最优。待优化TODO
