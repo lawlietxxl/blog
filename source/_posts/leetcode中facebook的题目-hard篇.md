@@ -519,3 +519,170 @@ class Solution {
 }
 ```
 每三位处理一次，注意处理0和空值，注意空格。准备数据材料的时候，注意多种情况。
+
+# [282. Expression Add Operators](https://leetcode.com/problems/expression-add-operators/)
+
+## FAIL
+```java
+class Solution {
+    public List<String> addOperators(String num, int target) {
+        return dfs(num, target);
+    }
+    
+    private List<String> dfs(String num, int target) {
+        List<String> res = new ArrayList<>();
+        if(num.length() == 0) return res;
+        int sum = 0;
+        for(int i = 0; i < num.length(); i++) {
+            char c = num.charAt(i);
+            sum = sum*10 + (c-'0');
+            if(i == num.length()-1 && sum == target) {
+                res.add(num);
+                return res;
+            }
+            if(i != num.length()-1) {
+                List<String> l1 = dfs(num.substring(i+1), sum-target);
+                List<String> l2 = dfs(num.substring(i+1), target-sum);
+                if(!l1.isEmpty()) res.addAll(insert(l1, num.substring(0, i+1)+"-"));
+                if(!l2.isEmpty()) res.addAll(insert(l2, num.substring(0, i+1)+"+"));
+                
+                // 处理乘号
+                int sum2 = 0;
+                for(int j = i+1; j < num.length(); j++) {
+                    char c2 = num.charAt(j);
+                    sum2 = sum2*10 + (c2-'0');
+                    // bugfix
+                    if(j == num.length()-1 && sum*sum2 == target) {
+                        res.add(num.substring(0, i+1)+"*"+num.substring(i+1, j+1));
+                        return res;
+                    }
+                    l1 = dfs(num.substring(j+1), sum*sum2-target);
+                    l2 = dfs(num.substring(j+1), target-sum*sum2);
+                    if(!l1.isEmpty()) res.addAll(insert(l1, num.substring(0, i+1)+"*"+num.substring(i+1, j+1)+"-"));
+                    if(!l2.isEmpty()) res.addAll(insert(l2, num.substring(0, i+1)+"*"+num.substring(i+1, j+1)+"+"));
+                    
+                    // 处理连乘 ...无穷无尽
+                    for(int k = j+1; k < num.length(); k++) {
+                        char c3 = num.charAt(c3);
+                        sum3 = sum3*10+(c3-'0');
+                        if(k == num.length()-1 && sum * sum2 * sum3 == target) {
+                            res.add(num.substring(0, i+1)+"*"+num.substring(i+1, j+1)+"*"+num.substring(j+1));
+                            return res;
+                        }
+                        
+                    } 
+                }
+            }
+        }
+        return res;
+    }
+    
+    private List<String> insert(List<String> l, String s) {
+        for(int i = 0; i < l.size(); i++) l.set(i, s+l.get(i));
+        return l;
+    }
+}
+```
+
+用dfs处理加减是可以的。但是加上乘法，因为两者优先级不一样，所以就无法使用dfs了。不然就会循环套循环无穷无尽。
+
+## FAIL2
+```java
+class Solution {
+    public List<String> addOperators(String num, int target) {
+        List<String> res = all(num, target);
+        Collections.sort(res);
+        return res;
+    }
+    
+    // 只有加减
+    private List<String> dfs(String num, int target) {
+        List<String> res = new ArrayList<>();
+        if(num.length() == 0) return res;
+        int sum = 0;
+        for(int i = 0; i < num.length(); i++) {
+            char c = num.charAt(i);
+            sum = sum*10 + (c-'0');
+            if(i == num.length()-1 && sum == target) {
+                res.add(num);
+                return res;
+            }
+            if(i != num.length()-1) {
+                List<String> l1 = dfs(num.substring(i+1), sum-target);
+                List<String> l2 = dfs(num.substring(i+1), target-sum);
+                if(!l1.isEmpty()) res.addAll(insert(l1, num.substring(0, i+1)+"-"));
+                if(!l2.isEmpty()) res.addAll(insert(l2, num.substring(0, i+1)+"+"));
+                // 处理乘号
+                //List<String> l3 = dfsMultiply(num.substring(i+1), target, sum, num.substring(0, i+1));
+                //if(!l3.isEmpty()) res.addAll(insert(l3, num.substring(0, i+1)+"*"));
+            }
+            // bugfix
+            if(i == 0 && c == '0') break;
+        }
+        return res;
+    }
+    
+    private List<String> all(String num, int target) {
+        List<String> res = new ArrayList<>();
+        int sum = 0;
+        for(int i = 0; i < num.length(); i++) {
+            char c = num.charAt(i);
+            sum = sum*10 + (c-'0');
+            if(i == num.length()-1 && sum == target) {
+                res.add(num);
+                return res;
+            }
+            if( i != num.length() -1) {
+                res.addAll(dfsMultiply(num.substring(i+1), target, sum, num.substring(0, i+1)));
+                List<String> l1 = all(num.substring(i+1), sum-target);
+                List<String> l2 = all(num.substring(i+1), target-sum);
+                if(!l1.isEmpty()) res.addAll(insert(l1, num.substring(0, i+1)+"-"));
+                if(!l2.isEmpty()) res.addAll(insert(l2, num.substring(0, i+1)+"+"));
+            }
+            // bugfix
+            if(i == 0 && c == '0') break;
+        }
+        return res;
+    }
+    
+    //开头是乘号
+    private List<String> dfsMultiply(String num, int target, int m1, String m1s) {
+        List<String> res = new ArrayList<>();
+        if(num.length() == 0) return res;
+        int sum = 0;
+        for(int i = 0; i < num.length(); i++) {
+            char c = num.charAt(i);
+            sum = sum*10 + (c-'0');
+            if(i == num.length()-1 && sum*m1 == target) {
+                res.add(m1s+"*"+num);
+                return res;
+            }
+            
+            List<String> l1 = dfs(num.substring(i+1), m1*sum-target);
+            List<String> l2 = dfs(num.substring(i+1), target-m1*sum);
+            if(!l1.isEmpty()) res.addAll(insert(l1, m1s+"*"+num.substring(0, i+1)+"-"));
+            if(!l2.isEmpty()) res.addAll(insert(l2, m1s+"*"+num.substring(0, i+1)+"+"));
+            
+            List<String> l3 = dfsMultiply(num.substring(i+1), target, m1*sum, m1s+"*"+num.substring(0, i+1));
+            //if(!l3.isEmpty()) res.addAll(insert(l3, m1s+"*"));
+            if(!l3.isEmpty()) res.addAll(l3);
+            // bugfix
+            if(i == 0 && c == '0') break;
+        }
+        return res;
+    }
+    
+    
+    private List<String> insert(List<String> l, String s) {
+        for(int i = 0; i < l.size(); i++) l.set(i, s+l.get(i));
+        return l;
+    }
+}
+```
+
+这次做了改进，区分了只有加减号，和开头是乘号 这两种情况。目前返回时正确的了。但是有一种存在0的情况没有排除。
+case: 105, 5。这种做法会返回 1*05.需要特殊处理0. 于是加了 bugfix两句话。但是有case过不去。
+"123456789"
+45
+发现输出少了很多个解。
+TODO
