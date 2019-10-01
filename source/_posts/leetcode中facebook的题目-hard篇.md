@@ -686,3 +686,163 @@ case: 105, 5。这种做法会返回 1*05.需要特殊处理0. 于是加了 bugf
 45
 发现输出少了很多个解。
 TODO
+
+## 55.92 56.76 40mins
+```java
+class Solution {
+    public List<String> addOperators(String num, int target) {
+        List<String> res = new ArrayList<>();
+        // bugfix start with iteration
+        for(int i = 0; i < num.length(); i++) {
+            StringBuilder sb = new StringBuilder();
+            if(i == 0 && num.charAt(i) == '0') {
+                dfs(res, sb.append('0'), num, i, target, 0, 0);
+                break;
+            }
+            String part = num.substring(0, i+1);
+            // num overflow?? use long!!
+            long partVal = Long.parseLong(part);
+            sb.append(part);
+            dfs(res, sb, num, i, target, partVal, partVal);
+        }
+        return res;
+    }
+    
+    private void dfs(List<String> res, StringBuilder sb ,String num, int pos, long target, long val, long multi) {
+        // bugfix
+        if(pos == num.length()-1) {
+            if(val == target) res.add(sb.toString());
+            return;
+        }
+        StringBuilder tmp;
+        for(int i = pos+1; i < num.length(); i++) {
+            if(i == pos+1 && num.charAt(i) == '0') {
+                // bugfix tmp = sb
+                tmp = new StringBuilder(sb);
+                dfs(res, tmp.append('+').append('0'), num, i, target, val, 0);
+                tmp = new StringBuilder(sb);
+                dfs(res, tmp.append('-').append('0'), num, i, target, val, 0);
+                tmp = new StringBuilder(sb);
+                dfs(res, tmp.append('*').append('0'), num, i, target, val-multi, 0);
+                return;
+            }
+            String part = num.substring(pos+1, i+1);
+            long partVal = Long.parseLong(part);
+            tmp = new StringBuilder(sb);
+            dfs(res, tmp.append('+').append(part), num, i, target, val+partVal, partVal);
+            tmp = new StringBuilder(sb);
+            dfs(res, tmp.append('-').append(part), num, i, target, val-partVal, -partVal);
+            tmp = new StringBuilder(sb);
+            dfs(res, tmp.append('*').append(part), num, i, target, val-multi+multi*partVal, multi*partVal);
+        }
+    }
+}
+```
+参考后面的答案写出来的结果，比原答案复杂不少，原因是dfs中 pos的含义与原答案中不一样。我写的dfs中pos意思是"当前位置"，但是答案中dfs中的pos意思是，"下一个位置"。总结一下dfs的一贯思路
+
+dfs思路
++ 入参很关键，要把dfs的入参设计好
++ 入参一定是跟**结果** 和 **前序输入**相关。一定不能和后续输入相关。（比如本题，因为有了一个乘号，所以之前考虑dfs的时候会考虑后续的输入，但是这是不对的。答案使用了一个multiply变量输入dfs，解决了这个问题。让后续依赖前序，而非相反。
++ dfs需要注意如果dfs内部有多个分支，那么不同分支之间一定不要互相影响，要回退一些临时数据。比如本题中的stringBuilder，要每次进行copy
+
+## ANSWER
+```java
+public class Solution {
+    public List<String> addOperators(String num, int target) {
+        List<String> rst = new ArrayList<String>();
+        if(num == null || num.length() == 0) return rst;
+        helper(rst, "", num, target, 0, 0, 0);
+        return rst;
+    }
+    public void helper(List<String> rst, String path, String num, int target, int pos, long eval, long multed){
+        if(pos == num.length()){
+            if(target == eval)
+                rst.add(path);
+            return;
+        }
+        for(int i = pos; i < num.length(); i++){
+            if(i != pos && num.charAt(pos) == '0') break;
+            long cur = Long.parseLong(num.substring(pos, i + 1));
+            if(pos == 0){
+                helper(rst, path + cur, num, target, i + 1, cur, cur);
+            }
+            else{
+                helper(rst, path + "+" + cur, num, target, i + 1, eval + cur , cur);
+                
+                helper(rst, path + "-" + cur, num, target, i + 1, eval -cur, -cur);
+                
+                helper(rst, path + "*" + cur, num, target, i + 1, eval - multed + multed * cur, multed * cur );
+            }
+        }
+    }
+}
+```
+
+# [489. Robot Room Cleaner](https://leetcode.com/problems/robot-room-cleaner/)
+## 5.45 8.00 50mins
+```java
+/**
+ * // This is the robot's control interface.
+ * // You should not implement it, or speculate about its implementation
+ * interface Robot {
+ *     // Returns true if the cell in front is open and robot moves into the cell.
+ *     // Returns false if the cell in front is blocked and robot stays in the current cell.
+ *     public boolean move();
+ *
+ *     // Robot will stay in the same cell after calling turnLeft/turnRight.
+ *     // Each turn will be 90 degrees.
+ *     public void turnLeft();
+ *     public void turnRight();
+ *
+ *     // Clean the current cell.
+ *     public void clean();
+ * }
+ */
+class Solution {
+    private Map<Integer, Set<Integer>> map = new HashMap<>();
+    
+    public void cleanRoom(Robot robot) {
+        dfs(robot, 0, 0, 0, -1);
+    }
+    
+    private void visit(int x, int y) {
+        map.computeIfAbsent(x, i->new HashSet<Integer>()).add(y);
+    }
+    private boolean visited(int x, int y) {
+        return map.computeIfAbsent(x, i->new HashSet<Integer>()).contains(y);
+    }
+    
+    // x 左右，y上下
+    // 方向回位
+    // bugfix 方向会影响，需要输入方向
+    private void dfs(Robot robot, int x, int y, int xd, int yd) {
+        if(visited(x, y)) return;
+        visit(x, y);
+        robot.clean();
+        move(robot, x+xd, y+yd, xd, yd);
+        robot.turnRight();
+        move(robot, x+yd, y-xd, yd, -xd);
+        robot.turnRight();
+        move(robot, x-xd, y-yd, -xd, -yd);
+        robot.turnRight();
+        move(robot, x-yd, y+xd, -yd, xd);
+        robot.turnRight();
+    }
+    
+    private boolean move(Robot robot, int x, int y, int xd, int yd) {
+        boolean res = false;
+        if(robot.move()) {
+            res = true;
+            dfs(robot, x, y, xd, yd);
+            robot.turnRight();
+            robot.turnRight();
+            robot.move();
+            robot.turnRight();
+            robot.turnRight();
+        }
+        return res;
+    }
+}
+```
+
+有了上一题dfs的经验，这一题会做的简单一些。需要注意的是每次dfs要输入方向，同时dfs之后要回退到当前位置，方向也要回位。

@@ -398,3 +398,25 @@ class Solution {
 
 题目不难，去掉一个字母能回文。判断去掉哪个即可。
 但是时间效率貌似只有9.待优化
+
+# [415. Add Strings](https://leetcode.com/problems/add-strings/)
+## 37.64 100.00 8mins
+```java
+class Solution {
+    public String addStrings(String num1, String num2) {
+        StringBuilder sb = new StringBuilder();
+        int cas = 0;
+        for(int i = 0; i < Math.max(num1.length(), num2.length()); i++) {
+            int c1 = num1.length()-1-i < 0 ? 0 : num1.charAt(num1.length()-1-i)-'0';
+            int c2 = num2.length()-1-i < 0 ? 0 : num2.charAt(num2.length()-1-i)-'0';
+            int sum = cas + c1 + c2;
+            cas = sum/10;
+            sb.insert(0, sum%10);
+        }
+        if(cas != 0) sb.insert(0, cas);
+        return sb.toString();
+    }
+}
+```
+
+TODO 时间有待提升
