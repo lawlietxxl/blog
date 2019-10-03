@@ -1,4 +1,872 @@
 ---
+title: facebook problems
+tags: [leetcode]
+categories: [leetcode facebook]
+keywords: []
+date: 2019-10-03 14:30:05
+mathjax: true
+---
+记录leetcode里面facebook标签的题目，耗时，代码，时间空间占比.
+格式为：
+```markdown
+# [题号]. 题目名（链接）
+
+## [时间占比] [空间占比] 解题耗时
+[源码]
+[解释]
+```
+
+源码中如果提交有错误，会标记  //bugfix
+
+<!--more-->
+
+# HARD
+
+## [158. Read N Characters Given Read4 II - Call multiple times](https://leetcode.com/problems/read-n-characters-given-read4-ii-call-multiple-times/)
+
+### 100.00% 100.00% 60mins
+
+```java
+/**
+ * The read4 API is defined in the parent class Reader4.
+ *     int read4(char[] buf); 
+ */
+public class Solution extends Reader4 {
+    /**
+     * @param buf Destination buffer
+     * @param n   Number of characters to read
+     * @return    The number of actual characters read
+     */
+    
+    private char[] innerBuf = new char[4];
+    private int innerOffset = 0;
+    private int innerLength = 0;
+    
+    private boolean EOF = false;
+    
+    public int read(char[] buf, int n) {
+        // result, n, innerOffset, readFromInner
+        if(n <= 0 || EOF) return 0;
+        int bufOffset = 0;
+        
+        // read from innerBuffer
+        int min;
+        min = Math.min(innerLength - innerOffset, n);
+        for(int i = 0; i < min; i ++){
+            buf[bufOffset++] = innerBuf[innerOffset++];
+        }
+        n -= min;
+        if(innerOffset == innerLength){
+            innerOffset = 0;
+            innerLength = 0;
+        }
+        //bugfix
+        if(n == 0) return bufOffset;
+        
+        // read from file
+        int iter = n/4;
+        for(int i = 0; i < iter; i++){
+            int tmpResult = read4(innerBuf);
+            copyArray(buf, bufOffset, innerBuf, 0, tmpResult);
+            n -= tmpResult;
+            bufOffset += tmpResult;
+            if(tmpResult < 4){
+                EOF = true;
+                return bufOffset;
+            }
+        }
+        // bugfix
+        if(n == 0) return bufOffset;
+        
+        // write to innerBuffer
+        // left is n
+        
+        //bugfix 没考虑tmpResult为0的情况
+        int tmpResult = read4(innerBuf);
+        min = Math.min(tmpResult, n);
+        copyArray(buf, bufOffset, innerBuf, 0, min);
+        bufOffset += min;
+        if(tmpResult <= n){
+            EOF = true;
+        }else{
+            innerOffset = n;
+            innerLength = tmpResult;
+        }
+        return bufOffset;
+    }
+    
+    public void copyArray(char[] dest, int destOffset, char[] src, int srcOffset, int length){
+        for(int i = 0; i < length; i ++){
+            dest[destOffset + i] = src[srcOffset + i];
+        }
+    }
+}
+```
+
+有一次提交错误，存在bug，最后的时候没考虑tmpResult为0的情况，导致innerLength设置为0了。
+思路：
++ 设置内部缓存，同时记录缓存offset和缓存长度
++ 顺序为先读缓存，再读文件，最后再写缓存。注意更新各种本地变量
+感觉有点像tcp协议操作系统之类的实现
+
+## [23. Merge k Sorted Lists](https://leetcode.com/problems/merge-k-sorted-lists/)
+
+### 98.74 27.33 18mins
+```java
+/**
+ * Definition for singly-linked list.
+ * public class ListNode {
+ *     int val;
+ *     ListNode next;
+ *     ListNode(int x) { val = x; }
+ * }
+ */
+class Solution {
+    public ListNode mergeKLists(ListNode[] lists) {
+        //bugfix
+        if(lists.length == 0) return null;
+        
+        return merge(lists, 0, lists.length-1);
+    }
+    
+    private ListNode merge(ListNode[] lists, int lo, int hi){  
+        if(lo == hi) return lists[lo];
+        int mid = lo + (hi - lo)/2;
+        ListNode l1 = merge(lists, lo, mid);
+        ListNode l2 = merge(lists, mid+1, hi);
+        
+        ListNode result = new ListNode(0);
+        ListNode tail = result;
+        
+        while(true){
+            if(l1 == null && l2 == null) break;
+            if(l1 == null && l2 != null){
+                tail.next = l2;
+                break;
+            }
+            if(l1 != null && l2 == null){
+                tail.next = l1;
+                break;
+            }
+            
+            if(l1.val < l2.val) {
+                tail.next = l1;
+                l1 = l1.next;
+                tail.next.next = null;
+                tail = tail.next;
+            }else{
+                tail.next = l2;
+                l2 = l2.next;
+                tail.next.next = null;
+                tail = tail.next;
+            }
+        }
+        
+        result = result.next;
+        return result;
+    }
+}
+```
+使用分治法的思想，一半一半的处理，把复杂度降低log。
+但是内存占用较高，而且并不会分析算法复杂度。
+
+## [301. Remove Invalid Parentheses](https://leetcode.com/problems/remove-invalid-parentheses/) (FAIL)
+
+### DFS ANSWER
+```java
+class Solution {
+    public List<String> removeInvalidParentheses(String s) {
+        List<String> res = new ArrayList<>();
+        
+        dfs(s, res, 0, 0, '(', ')');
+        return res;
+    }
+    
+    void dfs(String s, List<String> res, int i_last, int j_last, char c1, char c2) {
+        int stack = 0;
+        for(int i = i_last; i < s.length(); ++i){
+            if(s.charAt(i) == c1) stack++;
+            if(s.charAt(i) == c2) stack--;
+            if(stack >= 0) continue;
+            // stack < 0, dfs all of before
+            //bugfix
+            for(int j = j_last; j <= i; j++){
+                if(s.charAt(j) == c2 && (j == j_last || s.charAt(j-1) != c2))
+                    dfs(s.substring(0, j) + s.substring(j+1, s.length()), res, i, j , c1, c2);
+            }
+            //bugfix
+            return;
+        }
+        //后缀已经正确，现在开始处理前缀
+        //倒排序
+        String reversed = new StringBuilder(s).reverse().toString();
+        if(c1 == '(')
+            dfs(reversed, res, 0, 0, ')', '(');
+        else
+            res.add(reversed);
+    }
+}
+```
+
+**tips**
++ 要看到本质。删除几个字符形成正确的结构 --> 有多种删除方法 --> 本质是组合的问题 --> 组合的问题都可以用DFS解。
++ 结论。组合问题 = DFS问题（比如八皇后）
++ 先解决后缀的正确性，再倒序后处理前缀。
++ 上文思路见图。
+    + 注意 i 和 j：i前面的字符串已经是正确的了，j是为了防止重复。所以i 和 j要记录下来，不断移动。
+{% asset_img 301.png %}
+
+## [124. Binary Tree Maximum Path Sum](https://leetcode.com/problems/binary-tree-maximum-path-sum/)
+
+### 5.04 5.95 1h TODO
+```java
+/**
+ * Definition for a binary tree node.
+ * public class TreeNode {
+ *     int val;
+ *     TreeNode left;
+ *     TreeNode right;
+ *     TreeNode(int x) { val = x; }
+ * }
+ */
+class Solution {
+    public int maxPathSum(TreeNode root) {
+        if(root == null) return 0;
+        
+        // exclude current root
+        return traveralTree(root);
+    }
+    private int traveralTree(TreeNode root) {
+        int l1 = computeLeft(root);
+        int r1 = computeRight(root);
+        int res = (l1+r1) - root.val;
+        if(root.left != null) {
+            int l = traveralTree(root.left);
+            res = res > l ? res : l;
+        }
+        if(root.right != null) {
+            int r = traveralTree(root.right);
+            res = res > r ? res : r;
+        }
+        return res;
+    }
+    
+    // include root, root should not be null
+    private int computeLeft(TreeNode root) {
+        int res = root.val;
+        if(root.left != null) {
+            int l = computeLeft(root.left);
+            int r = computeRight(root.left);
+            int more = Math.max(l, r);
+            res += Math.max(0, more);
+        }
+        return res;
+    }
+    
+    private int computeRight(TreeNode root) {
+        int res = root.val;
+        if(root.right != null) {
+            int l = computeLeft(root.right);
+            int r = computeRight(root.right);
+            int more = Math.max(l, r);
+            res += Math.max(0, more);
+        }
+        return res;
+    }
+}
+```
+
+遍历这棵树（traveralTree），分别计算经过每个node的最大值（通过计算左侧和右侧最大值进行间接计算），最后输出最大结果。
+**todo**：
++ 感觉上有很多复杂计算，需要优化
++ 为什么内存占用会这么大，递归的内存占用分析不会。可以用这道题进行分析
+
+## [42. Trapping Rain Water](https://leetcode.com/problems/trapping-rain-water/) TODO
+FAIL
+### solution 1 98.21 92.47 TODO(多解)
+
+```java
+class Solution {
+    public int trap(int[] height) {
+        if(height.length <= 2) return 0;
+        int[] res = new int[height.length];
+        int max = height[0];
+        for(int i = 0; i < height.length; i++)
+            res[i] = max = Math.max(max, height[i]);
+        max = height[height.length-1];
+        
+        for(int i = 0; i < height.length; i++){
+            max = Math.max(max, height[height.length-1-i]);
+            res[height.length-1-i] = Math.min(res[height.length-1-i], max);
+        }
+        
+        int result = 0;
+        for(int i = 0; i < height.length; i++)
+            result += res[i] - height[i];
+        return result;
+    }
+}
+```
+从左向右，取一次最大值；从右向左，取一次最大值。两者取小的，再进行减法。这算是动态规划的方法。
+
+## [340. Longest Substring with At Most K Distinct Characters](https://leetcode.com/problems/longest-substring-with-at-most-k-distinct-characters/)
+
+### 21.84 46.81 30mins
+```java
+class Solution {
+    public int lengthOfLongestSubstringKDistinct(String s, int k) {
+        if(k == 0) return 0;
+        
+        int res = 0;
+        Map<Character, Integer> cache = new HashMap<>();
+        
+        int i = 0, j = 0;
+        while(i < s.length()) {
+            if(j == s.length()) return res;
+            char c = s.charAt(j++);
+            if(!cache.containsKey(c)) cache.put(c, 0);
+            cache.put(c, cache.get(c)+1);
+            // bugfix == -> <=
+            if(cache.size() <= k) res = Math.max(res, j-i);
+            while(cache.size() > k) {
+                char ci = s.charAt(i++);
+                if(cache.get(ci) == 1) cache.remove(ci);
+                else cache.put(ci, cache.get(ci)-1);
+                if(cache.size() == k) res = Math.max(res, j-i);
+            }
+        }
+        return res;
+    }
+}
+```
+
+思路：两个pointer，i，j(excluded)，向右移动。分别计算里面的包含字符串个数 .但是有额外计算，导致时间复杂度较高
+
+## [317. Shortest Distance from All Buildings](https://leetcode.com/problems/shortest-distance-from-all-buildings/) FAIL
+
+## [76. Minimum Window Substring](https://leetcode.com/problems/minimum-window-substring/)
+### 5.01 5.32 38mins
+```java
+// 漏掉了几种testcase
+// "a" "a"
+// "a" "aa"  没考虑到这种testcase 原理上就错了 
+class Solution {
+    public String minWindow(String s, String t) {
+        Map<Character, Integer> set = new HashMap<>();
+        for(char c: t.toCharArray()) {
+            if(!set.containsKey(c)) set.put(c, 0);
+            set.put(c, set.get(c)+1);
+        }
+    
+        
+        Map<Character, Integer> map = new HashMap<>();
+        Queue<Integer> q = new LinkedList<>();
+        
+        String res = "";
+        
+        for(int i = 0; i < s.length(); ++i)
+            if(set.containsKey(s.charAt(i))) {
+                if(!map.containsKey(s.charAt(i))) map.put(s.charAt(i), 0);
+                map.put(s.charAt(i), map.get(s.charAt(i)) + 1);
+                // bugfix
+                q.offer(i);
+                
+                // bugfix while(map.equals(set) && q.size() != 0) {
+                // bugfix while(map.keySet().size() == set.keySet().size() && q.size() != 0) {
+                while(mapContains(map, set) && q.size() != 0) {
+                    int start = q.poll();
+                    if(res.length() == 0) res = s.substring(start, i+1);
+                    else res = res.length() < s.substring(start, i+1).length() ? res : s.substring(start, i+1);
+                    map.put(s.charAt(start), map.get(s.charAt(start)) - 1);
+                    if(map.get(s.charAt(start)) == 0) map.remove(s.charAt(start));
+                }
+                // bugfix q.offer(i);
+            }
+        return res;
+    }
+    
+    private boolean mapContains(Map<Character, Integer> m1, Map<Character, Integer> m2) {
+        if(m1.size() == m2.size()) {
+            for(Character c: m1.keySet())
+                if(m1.get(c) < m2.get(c)) return false;
+        } else return false;
+        return true;
+    }
+}
+```
+思路：
++ 从左向右扫描，记录每个可能点的位置。
++ 注意几个testcase，待优化
+
+## [269. Alien Dictionary](https://leetcode.com/problems/alien-dictionary/) FAIL
+这里遇到一个之前没了解过的知识点，[拓扑排序/Topological sorting](https://en.wikipedia.org/wiki/Topological_sorting##Kahn's_algorithm)，拓扑排序分为两种，BFS和DFS。待学习和写算法。
+
+## [282. Expression Add Operators](https://leetcode.com/problems/expression-add-operators/) FAIL
+有个问题：DFS和BACKTRACKING 到底有什么区别?
+
+## [297. Serialize and Deserialize Binary Tree](https://leetcode.com/problems/serialize-and-deserialize-binary-tree/)
+
+### 42.59 54.28 20mins TODO(DFS BFS?)
+```java
+/**
+ * Definition for a binary tree node.
+ * public class TreeNode {
+ *     int val;
+ *     TreeNode left;
+ *     TreeNode right;
+ *     TreeNode(int x) { val = x; }
+ * }
+ */
+public class Codec {
+
+    // Encodes a tree to a single string.
+    public String serialize(TreeNode root) {
+        StringBuilder sb = new StringBuilder();
+        Queue<TreeNode> q = new LinkedList<TreeNode>();
+        q.offer(root);
+        while(q.size() != 0) {
+            TreeNode node = q.poll();
+            if(node != null) {
+                sb.append(node.val).append(" ");
+                q.offer(node.left);
+                q.offer(node.right);
+            }
+            else sb.append("null").append(" ");
+        }
+        return sb.substring(0, sb.length()-1);
+    }
+
+    // Decodes your encoded data to tree.
+    public TreeNode deserialize(String data) {
+        String[] vals = data.split(" ");
+        Queue<TreeNode> q = new LinkedList<>();
+        TreeNode res;
+        if(vals[0].equals("null")) return null;
+        else res = new TreeNode(Integer.valueOf(vals[0]));
+        q.offer(res);
+        for(int i = 1; i < vals.length; i++) {
+            TreeNode n;
+            if(vals[i].equals("null")) n = null;
+            else n = new TreeNode(Integer.valueOf(vals[i]));
+            
+            TreeNode node = q.poll();
+            node.left = n;
+            if(n != null) q.offer(n);
+            
+            if(vals[++i].equals("null")) n = null;
+            else n = new TreeNode(Integer.valueOf(vals[i]));
+            
+            node.right = n;
+            if(n != null) q.offer(n);
+        }
+        return res;
+    }
+}
+
+// Your Codec object will be instantiated and called as such:
+// Codec codec = new Codec();
+// codec.deserialize(codec.serialize(root));
+```
+
+实现了类似leetcode的方式：\[1,2,3,null,null,4,5\] 但是时间和空间复杂度是50%左右。待优化。
+## [273. Integer to English Words](https://leetcode.com/problems/integer-to-english-words/)
+### 17.43 100.00 29mins
+```java
+class Solution {
+    String[] dig = new String[]{"", "One", "Two", "Three", "Four", 
+                               "Five", "Six", "Seven", "Eight", "Nine"};
+    String[] dig2 = new String[] {"Ten", "Eleven", "Twelve", "Thirteen", "Fourteen", 
+                                 "Fifteen", "Sixteen", "Seventeen", "Eighteen", "Nineteen"};
+    String[] tens = new String[]{"", "", "Twenty", "Thirty", "Forty", "Fifty", "Sixty", 
+                                "Seventy", "Eighty", "Ninety"};
+    String[] unit = new String[]{"", "Thousand", "Million", "Billion"};
+    
+    //101-119
+    // bugfix case: 0
+    public String numberToWords(int num) {
+        if(num == 0) return "Zero";
+        
+        Stack<String> stack = new Stack<>();
+        int iter = 0;
+        while(num != 0) {
+            int mod = num % 1000;
+            // bugfix
+            if(mod == 0) {
+                num /= 1000;
+                iter++;
+                continue;
+            }
+            stack.push(unit[iter]);
+            
+            int last2 = mod%100;
+            if(last2 != 0) {
+                if(last2 < 10) stack.push(dig[last2]);
+                else if(last2 < 20) stack.push(dig2[last2-10]);
+                else {
+                    int ten = last2/10;
+                    int one = last2%10;
+                    if(one != 0) stack.push(dig[one]);
+                    stack.push(tens[ten]);
+                }
+            }
+            int first1 = mod/100;
+            if(first1 != 0) {
+                stack.push("Hundred");
+                stack.push(dig[first1]);
+            }
+            
+            num /= 1000;
+            iter++;
+        }
+        
+        StringBuilder sb = new StringBuilder();
+        while(stack.size() != 0) {
+            if(stack.peek().equals("")) {
+                stack.pop();
+                continue;
+            }
+            sb.append(stack.pop()).append(" ");
+        }
+        return sb.substring(0, sb.length()-1).toString();
+    }
+}
+```
+每三位处理一次，注意处理0和空值，注意空格。准备数据材料的时候，注意多种情况。
+
+## [282. Expression Add Operators](https://leetcode.com/problems/expression-add-operators/)
+
+### FAIL
+```java
+class Solution {
+    public List<String> addOperators(String num, int target) {
+        return dfs(num, target);
+    }
+    
+    private List<String> dfs(String num, int target) {
+        List<String> res = new ArrayList<>();
+        if(num.length() == 0) return res;
+        int sum = 0;
+        for(int i = 0; i < num.length(); i++) {
+            char c = num.charAt(i);
+            sum = sum*10 + (c-'0');
+            if(i == num.length()-1 && sum == target) {
+                res.add(num);
+                return res;
+            }
+            if(i != num.length()-1) {
+                List<String> l1 = dfs(num.substring(i+1), sum-target);
+                List<String> l2 = dfs(num.substring(i+1), target-sum);
+                if(!l1.isEmpty()) res.addAll(insert(l1, num.substring(0, i+1)+"-"));
+                if(!l2.isEmpty()) res.addAll(insert(l2, num.substring(0, i+1)+"+"));
+                
+                // 处理乘号
+                int sum2 = 0;
+                for(int j = i+1; j < num.length(); j++) {
+                    char c2 = num.charAt(j);
+                    sum2 = sum2*10 + (c2-'0');
+                    // bugfix
+                    if(j == num.length()-1 && sum*sum2 == target) {
+                        res.add(num.substring(0, i+1)+"*"+num.substring(i+1, j+1));
+                        return res;
+                    }
+                    l1 = dfs(num.substring(j+1), sum*sum2-target);
+                    l2 = dfs(num.substring(j+1), target-sum*sum2);
+                    if(!l1.isEmpty()) res.addAll(insert(l1, num.substring(0, i+1)+"*"+num.substring(i+1, j+1)+"-"));
+                    if(!l2.isEmpty()) res.addAll(insert(l2, num.substring(0, i+1)+"*"+num.substring(i+1, j+1)+"+"));
+                    
+                    // 处理连乘 ...无穷无尽
+                    for(int k = j+1; k < num.length(); k++) {
+                        char c3 = num.charAt(c3);
+                        sum3 = sum3*10+(c3-'0');
+                        if(k == num.length()-1 && sum * sum2 * sum3 == target) {
+                            res.add(num.substring(0, i+1)+"*"+num.substring(i+1, j+1)+"*"+num.substring(j+1));
+                            return res;
+                        }
+                        
+                    } 
+                }
+            }
+        }
+        return res;
+    }
+    
+    private List<String> insert(List<String> l, String s) {
+        for(int i = 0; i < l.size(); i++) l.set(i, s+l.get(i));
+        return l;
+    }
+}
+```
+
+用dfs处理加减是可以的。但是加上乘法，因为两者优先级不一样，所以就无法使用dfs了。不然就会循环套循环无穷无尽。
+
+### FAIL2
+```java
+class Solution {
+    public List<String> addOperators(String num, int target) {
+        List<String> res = all(num, target);
+        Collections.sort(res);
+        return res;
+    }
+    
+    // 只有加减
+    private List<String> dfs(String num, int target) {
+        List<String> res = new ArrayList<>();
+        if(num.length() == 0) return res;
+        int sum = 0;
+        for(int i = 0; i < num.length(); i++) {
+            char c = num.charAt(i);
+            sum = sum*10 + (c-'0');
+            if(i == num.length()-1 && sum == target) {
+                res.add(num);
+                return res;
+            }
+            if(i != num.length()-1) {
+                List<String> l1 = dfs(num.substring(i+1), sum-target);
+                List<String> l2 = dfs(num.substring(i+1), target-sum);
+                if(!l1.isEmpty()) res.addAll(insert(l1, num.substring(0, i+1)+"-"));
+                if(!l2.isEmpty()) res.addAll(insert(l2, num.substring(0, i+1)+"+"));
+                // 处理乘号
+                //List<String> l3 = dfsMultiply(num.substring(i+1), target, sum, num.substring(0, i+1));
+                //if(!l3.isEmpty()) res.addAll(insert(l3, num.substring(0, i+1)+"*"));
+            }
+            // bugfix
+            if(i == 0 && c == '0') break;
+        }
+        return res;
+    }
+    
+    private List<String> all(String num, int target) {
+        List<String> res = new ArrayList<>();
+        int sum = 0;
+        for(int i = 0; i < num.length(); i++) {
+            char c = num.charAt(i);
+            sum = sum*10 + (c-'0');
+            if(i == num.length()-1 && sum == target) {
+                res.add(num);
+                return res;
+            }
+            if( i != num.length() -1) {
+                res.addAll(dfsMultiply(num.substring(i+1), target, sum, num.substring(0, i+1)));
+                List<String> l1 = all(num.substring(i+1), sum-target);
+                List<String> l2 = all(num.substring(i+1), target-sum);
+                if(!l1.isEmpty()) res.addAll(insert(l1, num.substring(0, i+1)+"-"));
+                if(!l2.isEmpty()) res.addAll(insert(l2, num.substring(0, i+1)+"+"));
+            }
+            // bugfix
+            if(i == 0 && c == '0') break;
+        }
+        return res;
+    }
+    
+    //开头是乘号
+    private List<String> dfsMultiply(String num, int target, int m1, String m1s) {
+        List<String> res = new ArrayList<>();
+        if(num.length() == 0) return res;
+        int sum = 0;
+        for(int i = 0; i < num.length(); i++) {
+            char c = num.charAt(i);
+            sum = sum*10 + (c-'0');
+            if(i == num.length()-1 && sum*m1 == target) {
+                res.add(m1s+"*"+num);
+                return res;
+            }
+            
+            List<String> l1 = dfs(num.substring(i+1), m1*sum-target);
+            List<String> l2 = dfs(num.substring(i+1), target-m1*sum);
+            if(!l1.isEmpty()) res.addAll(insert(l1, m1s+"*"+num.substring(0, i+1)+"-"));
+            if(!l2.isEmpty()) res.addAll(insert(l2, m1s+"*"+num.substring(0, i+1)+"+"));
+            
+            List<String> l3 = dfsMultiply(num.substring(i+1), target, m1*sum, m1s+"*"+num.substring(0, i+1));
+            //if(!l3.isEmpty()) res.addAll(insert(l3, m1s+"*"));
+            if(!l3.isEmpty()) res.addAll(l3);
+            // bugfix
+            if(i == 0 && c == '0') break;
+        }
+        return res;
+    }
+    
+    
+    private List<String> insert(List<String> l, String s) {
+        for(int i = 0; i < l.size(); i++) l.set(i, s+l.get(i));
+        return l;
+    }
+}
+```
+
+这次做了改进，区分了只有加减号，和开头是乘号 这两种情况。目前返回时正确的了。但是有一种存在0的情况没有排除。
+case: 105, 5。这种做法会返回 1*05.需要特殊处理0. 于是加了 bugfix两句话。但是有case过不去。
+"123456789"
+45
+发现输出少了很多个解。
+TODO
+
+### 55.92 56.76 40mins
+```java
+class Solution {
+    public List<String> addOperators(String num, int target) {
+        List<String> res = new ArrayList<>();
+        // bugfix start with iteration
+        for(int i = 0; i < num.length(); i++) {
+            StringBuilder sb = new StringBuilder();
+            if(i == 0 && num.charAt(i) == '0') {
+                dfs(res, sb.append('0'), num, i, target, 0, 0);
+                break;
+            }
+            String part = num.substring(0, i+1);
+            // num overflow?? use long!!
+            long partVal = Long.parseLong(part);
+            sb.append(part);
+            dfs(res, sb, num, i, target, partVal, partVal);
+        }
+        return res;
+    }
+    
+    private void dfs(List<String> res, StringBuilder sb ,String num, int pos, long target, long val, long multi) {
+        // bugfix
+        if(pos == num.length()-1) {
+            if(val == target) res.add(sb.toString());
+            return;
+        }
+        StringBuilder tmp;
+        for(int i = pos+1; i < num.length(); i++) {
+            if(i == pos+1 && num.charAt(i) == '0') {
+                // bugfix tmp = sb
+                tmp = new StringBuilder(sb);
+                dfs(res, tmp.append('+').append('0'), num, i, target, val, 0);
+                tmp = new StringBuilder(sb);
+                dfs(res, tmp.append('-').append('0'), num, i, target, val, 0);
+                tmp = new StringBuilder(sb);
+                dfs(res, tmp.append('*').append('0'), num, i, target, val-multi, 0);
+                return;
+            }
+            String part = num.substring(pos+1, i+1);
+            long partVal = Long.parseLong(part);
+            tmp = new StringBuilder(sb);
+            dfs(res, tmp.append('+').append(part), num, i, target, val+partVal, partVal);
+            tmp = new StringBuilder(sb);
+            dfs(res, tmp.append('-').append(part), num, i, target, val-partVal, -partVal);
+            tmp = new StringBuilder(sb);
+            dfs(res, tmp.append('*').append(part), num, i, target, val-multi+multi*partVal, multi*partVal);
+        }
+    }
+}
+```
+参考后面的答案写出来的结果，比原答案复杂不少，原因是dfs中 pos的含义与原答案中不一样。我写的dfs中pos意思是"当前位置"，但是答案中dfs中的pos意思是，"下一个位置"。总结一下dfs的一贯思路
+
+dfs思路
++ 入参很关键，要把dfs的入参设计好
++ 入参一定是跟**结果** 和 **前序输入**相关。一定不能和后续输入相关。（比如本题，因为有了一个乘号，所以之前考虑dfs的时候会考虑后续的输入，但是这是不对的。答案使用了一个multiply变量输入dfs，解决了这个问题。让后续依赖前序，而非相反。
++ dfs需要注意如果dfs内部有多个分支，那么不同分支之间一定不要互相影响，要回退一些临时数据。比如本题中的stringBuilder，要每次进行copy
+
+### ANSWER
+```java
+public class Solution {
+    public List<String> addOperators(String num, int target) {
+        List<String> rst = new ArrayList<String>();
+        if(num == null || num.length() == 0) return rst;
+        helper(rst, "", num, target, 0, 0, 0);
+        return rst;
+    }
+    public void helper(List<String> rst, String path, String num, int target, int pos, long eval, long multed){
+        if(pos == num.length()){
+            if(target == eval)
+                rst.add(path);
+            return;
+        }
+        for(int i = pos; i < num.length(); i++){
+            if(i != pos && num.charAt(pos) == '0') break;
+            long cur = Long.parseLong(num.substring(pos, i + 1));
+            if(pos == 0){
+                helper(rst, path + cur, num, target, i + 1, cur, cur);
+            }
+            else{
+                helper(rst, path + "+" + cur, num, target, i + 1, eval + cur , cur);
+                
+                helper(rst, path + "-" + cur, num, target, i + 1, eval -cur, -cur);
+                
+                helper(rst, path + "*" + cur, num, target, i + 1, eval - multed + multed * cur, multed * cur );
+            }
+        }
+    }
+}
+```
+
+## [489. Robot Room Cleaner](https://leetcode.com/problems/robot-room-cleaner/)
+### 5.45 8.00 50mins
+```java
+/**
+ * // This is the robot's control interface.
+ * // You should not implement it, or speculate about its implementation
+ * interface Robot {
+ *     // Returns true if the cell in front is open and robot moves into the cell.
+ *     // Returns false if the cell in front is blocked and robot stays in the current cell.
+ *     public boolean move();
+ *
+ *     // Robot will stay in the same cell after calling turnLeft/turnRight.
+ *     // Each turn will be 90 degrees.
+ *     public void turnLeft();
+ *     public void turnRight();
+ *
+ *     // Clean the current cell.
+ *     public void clean();
+ * }
+ */
+class Solution {
+    private Map<Integer, Set<Integer>> map = new HashMap<>();
+    
+    public void cleanRoom(Robot robot) {
+        dfs(robot, 0, 0, 0, -1);
+    }
+    
+    private void visit(int x, int y) {
+        map.computeIfAbsent(x, i->new HashSet<Integer>()).add(y);
+    }
+    private boolean visited(int x, int y) {
+        return map.computeIfAbsent(x, i->new HashSet<Integer>()).contains(y);
+    }
+    
+    // x 左右，y上下
+    // 方向回位
+    // bugfix 方向会影响，需要输入方向
+    private void dfs(Robot robot, int x, int y, int xd, int yd) {
+        if(visited(x, y)) return;
+        visit(x, y);
+        robot.clean();
+        move(robot, x+xd, y+yd, xd, yd);
+        robot.turnRight();
+        move(robot, x+yd, y-xd, yd, -xd);
+        robot.turnRight();
+        move(robot, x-xd, y-yd, -xd, -yd);
+        robot.turnRight();
+        move(robot, x-yd, y+xd, -yd, xd);
+        robot.turnRight();
+    }
+    
+    private boolean move(Robot robot, int x, int y, int xd, int yd) {
+        boolean res = false;
+        if(robot.move()) {
+            res = true;
+            dfs(robot, x, y, xd, yd);
+            robot.turnRight();
+            robot.turnRight();
+            robot.move();
+            robot.turnRight();
+            robot.turnRight();
+        }
+        return res;
+    }
+}
+```
+
+有了上一题dfs的经验，这一题会做的简单一些。需要注意的是每次dfs要输入方向，同时dfs之后要回退到当前位置，方向也要回位。
+
+## [65. Valid Number](https://leetcode.com/problems/valid-number/)
+
+就是考虑边界条件特别多，TODO吧
+
+# MEDIUM
+
+---
 title: leetcode中facebook的题目 -- medium篇
 tags: []
 categories: []
@@ -9,8 +877,8 @@ mathjax: true
 同上。
 <!--more-->
 
-# [91. Decode Ways](https://leetcode.com/problems/decode-ways/)
-##  98.63% 100.00% 43min
+## [91. Decode Ways](https://leetcode.com/problems/decode-ways/)
+###  98.63% 100.00% 43min
 ```java
 class Solution {
     public int numDecodings(String s) {
@@ -44,8 +912,8 @@ class Solution {
 
 有一次错误提交，bug见代码中注释。为了方便，我为result数组多申请了一个格子。这里初始化result[0]应该是1.
 
-# [15. 3Sum](https://leetcode.com/problems/3sum/)
-## TLE -- wrong answer
+## [15. 3Sum](https://leetcode.com/problems/3sum/)
+### TLE -- wrong answer
 ```java
 class Solution {
     public List<List<Integer>> threeSum(int[] nums) {
@@ -99,14 +967,14 @@ class Solution {
 **分析**：思路被2sum同化了。利用O(n2)的时间做索引，然后再遍历寻找结果。结果TLE了。后续需要思考。
 PS：看了一下discuss发现都是O(n2)……
 
-# [973. K Closest Points to Origin](https://leetcode.com/problems/k-closest-points-to-origin/)
+## [973. K Closest Points to Origin](https://leetcode.com/problems/k-closest-points-to-origin/)
 
-## WRONG ANSER
+### WRONG ANSER
 没有注意审题，吭哧别都写了半天结果没看清楚题目……需要注意的是
 1、返回K个最近的点，是全部返回，而不是只返回一个
 2、保证只有唯一一个解（说明K+1这个点一定比K大）
 
-## 36.35 90.68 11mins
+### 36.35 90.68 11mins
 ```java
 class Solution {
     public int[][] kClosest(int[][] points, int K) {
@@ -144,9 +1012,9 @@ class Solution {
 
 使用java的PriorityQueue能够很快给出结果，但是时间上没有优势，待优化。
 
-# [215. Kth Largest Element in an Array](https://leetcode.com/problems/kth-largest-element-in-an-array/)
+## [215. Kth Largest Element in an Array](https://leetcode.com/problems/kth-largest-element-in-an-array/)
 
-## 32.77 78.76 40mins
+### 32.77 78.76 40mins
 ```java
 class Solution {
     public int findKthLargest(int[] nums, int k) {
@@ -189,9 +1057,9 @@ class Solution {
 + 快排内有玄机，详情见常用算法模板
 + 快拍时间复杂度仅仅为30+，需要优化
 
-# [56. Merge Intervals](https://leetcode.com/problems/merge-intervals/)
+## [56. Merge Intervals](https://leetcode.com/problems/merge-intervals/)
 
-## 25.19 36.23 18mins
+### 25.19 36.23 18mins
 ```java
 class Solution {
     public int[][] merge(int[][] intervals) {
@@ -225,7 +1093,7 @@ class Solution {
 + 按照第一位排序，这样排序好之后，就可以按照顺序依次merge了
 + TODO: 空间、时间都不优，待优化
 
-## 95.63 71.02
+### 95.63 71.02
 ```java
 class Solution {
 	public int[][] merge(int[][] intervals) {
@@ -265,9 +1133,9 @@ class Solution {
 
 {% asset_img 56.png %}
 
-# [253. Meeting Rooms II](https://leetcode.com/problems/meeting-rooms-ii/)
+## [253. Meeting Rooms II](https://leetcode.com/problems/meeting-rooms-ii/)
 
-## 100.00 75.64
+### 100.00 75.64
 ```java
 class Solution {
     public int minMeetingRooms(int[][] intervals) {
@@ -304,9 +1172,9 @@ class Solution {
 + start排序，end排序
 + 两者取比较小的数进行计数，start小，则result++；end小于等于，则result--。（注意取临时变量）
 
-# [238. Product of Array Except Self](https://leetcode.com/problems/product-of-array-except-self/)
+## [238. Product of Array Except Self](https://leetcode.com/problems/product-of-array-except-self/)
 
-## 100.00 92.13 15min
+### 100.00 92.13 15min
 ```java
 class Solution {
     public int[] productExceptSelf(int[] nums) {
@@ -336,7 +1204,7 @@ class Solution {
 建立两个数组，一个表示前面的乘积，一个表示后面的乘积。(注意数组长度)
 按照提示思考一下 constant 空间复杂度的解法
 
-## 100.00 100.00 8mins
+### 100.00 100.00 8mins
 ```java
 class Solution {
     public int[] productExceptSelf(int[] nums) {
@@ -357,9 +1225,9 @@ class Solution {
 ```
 constant 空间复杂度的解法
 
-# [560. Subarray Sum Equals K](https://leetcode.com/problems/subarray-sum-equals-k/)
+## [560. Subarray Sum Equals K](https://leetcode.com/problems/subarray-sum-equals-k/)
 
-## 30.78 97.83 38mins
+### 30.78 97.83 38mins
 
 ```java
 class Solution {
@@ -419,9 +1287,9 @@ class Solution {
 
 用map是比较好的写法，可以看到solution里面有。很不错。
 
-# [31. Next Permutation](https://leetcode.com/problems/next-permutation/)
+## [31. Next Permutation](https://leetcode.com/problems/next-permutation/)
 
-## 100.00 31.00 40min
+### 100.00 31.00 40min
 ```java
 class Solution {
     public void nextPermutation(int[] nums) {
@@ -482,9 +1350,9 @@ class Solution {
 思考四种情况，分别处理。注意第四种，一开始处理方式不对，耽误了很长时间：找到后面大于flag的第一个值，swap后，把后面的全部swap。
 {% asset_img 31.png %}
 
-# [986. Interval List Intersections](https://leetcode.com/problems/interval-list-intersections/)
+## [986. Interval List Intersections](https://leetcode.com/problems/interval-list-intersections/)
 
-## 99.93 78.38 15mins
+### 99.93 78.38 15mins
 ```java
 class Solution {
     public int[][] intervalIntersection(int[][] A, int[][] B) {
@@ -510,8 +1378,8 @@ class Solution {
 }
 ```
 
-# [98. Validate Binary Search Tree](https://leetcode.com/problems/validate-binary-search-tree/)
-## 100.00 79.54 20mins
+## [98. Validate Binary Search Tree](https://leetcode.com/problems/validate-binary-search-tree/)
+### 100.00 79.54 20mins
 ```java
 /**
  * Definition for a binary tree node.
@@ -558,9 +1426,9 @@ class Solution {
 + 对于图1的三元节点，保证 左<中<右 的大小顺序
 + 左子树的最右边节点 < 中 < 右子数的最左边节点哈罗芬瑟到了可热了狂热冷酷日
 
-# [199. Binary Tree Right Side View](https://leetcode.com/problems/binary-tree-right-side-view/)
+## [199. Binary Tree Right Side View](https://leetcode.com/problems/binary-tree-right-side-view/)
 
-##  98.32 100.00 12mins
+###  98.32 100.00 12mins
 ```java
 /**
  * Definition for a binary tree node.
@@ -602,9 +1470,9 @@ class Solution {
 
 使用队列和哨兵位，注意哨兵归放到队尾的时候要判断一下当前队列是否为空
 
-# [621. Task Scheduler](https://leetcode.com/problems/task-scheduler/)
+## [621. Task Scheduler](https://leetcode.com/problems/task-scheduler/)
 
-## AFTER FAIL: 41.12 86.76 26mins TODO
+### AFTER FAIL: 41.12 86.76 26mins TODO
 ```java
 class Solution {
     public int leastInterval(char[] tasks, int n) {
@@ -645,8 +1513,8 @@ class Solution {
 
 最后的时间只有42，还有优化空间。复杂度是 nlog(n)?
 
-# [15. 3Sum](https://leetcode.com/problems/3sum/)
-## 8.82 41.34 60mins TODO
+## [15. 3Sum](https://leetcode.com/problems/3sum/)
+### 8.82 41.34 60mins TODO
 ```java
 class Solution {
     public List<List<Integer>> threeSum(int[] nums) {
@@ -692,9 +1560,9 @@ class Solution {
 + 注意i的排重逻辑是判断跟前一个是否一样。
 + 轮询到j的时候，应该先算结果（看看本次ij循环前面，是否包含结果）；再进行sum的排重。
 
-# [133. Clone Graph](https://leetcode.com/problems/clone-graph/)(FAIL)
+## [133. Clone Graph](https://leetcode.com/problems/clone-graph/)(FAIL)
 
-## 正解
+### 正解
 ```java
 /*
 // Definition for a Node.
@@ -735,8 +1603,8 @@ class Solution {
 
 **图的复制**一类的题目都可以向上面两个思路靠。后者简单一些。
 
-# [173. Binary Search Tree Iterator](https://leetcode.com/problems/binary-search-tree-iterator/)
-## 18.55 92.59 7mins
+## [173. Binary Search Tree Iterator](https://leetcode.com/problems/binary-search-tree-iterator/)
+### 18.55 92.59 7mins
 ```java
 class BSTIterator {
     Queue<Integer> q = new LinkedList<>();
@@ -767,8 +1635,8 @@ class BSTIterator {
 
 利用 队列先进先出的特性 + 先序遍历。可以实现。但是时间复杂度较高，TODO 其他解法。TODO
 
-# [161. One Edit Distance](https://leetcode.com/problems/one-edit-distance/)
-## 99.56 100 20mins
+## [161. One Edit Distance](https://leetcode.com/problems/one-edit-distance/)
+### 99.56 100 20mins
 ```java
 class Solution {
     public boolean isOneEditDistance(String s, String t) {
@@ -804,9 +1672,9 @@ class Solution {
 ```
 从左到右扫描，遇到不同的一个字分三种情况比对即可.有bug，for循环无法进入到达length的情况
 
-# [211. Add and Search Word - Data structure design](https://leetcode.com/problems/add-and-search-word-data-structure-design/)
+## [211. Add and Search Word - Data structure design](https://leetcode.com/problems/add-and-search-word-data-structure-design/)
 
-## 85.20 81.82 25mins
+### 85.20 81.82 25mins
 ```java
 class WordDictionary {
     private class Node {
@@ -871,9 +1739,9 @@ class WordDictionary {
 经典的字典树，与之前思路不一样的是，之前我一直使用数组，而本次使用了根节点。对于空串的判断方便了很多。作为例子记住。
 另外存在一个bug：不存在那个bool判断，请注意。
 
-# [304. Range Sum Query 2D - Immutable](https://leetcode.com/problems/range-sum-query-2d-immutable/)
+## [304. Range Sum Query 2D - Immutable](https://leetcode.com/problems/range-sum-query-2d-immutable/)
 
-## 43.84 100.00 20mins
+### 43.84 100.00 20mins
 ```java
 class NumMatrix {
     private int[][] sum;
@@ -908,9 +1776,9 @@ class NumMatrix {
 
 不可变的二维数组，求和。比较常规。较为普通写法改进的是，新建空间的时候多建了一行，这样在计算的时候就不需要判断0了。
 
-# [311. Sparse Matrix Multiplication](https://leetcode.com/problems/sparse-matrix-multiplication/)
+## [311. Sparse Matrix Multiplication](https://leetcode.com/problems/sparse-matrix-multiplication/)
 
-## 25.55 100.00 6mins
+### 25.55 100.00 6mins
 ```java
 class Solution {
     public int[][] multiply(int[][] A, int[][] B) {
@@ -928,7 +1796,7 @@ class Solution {
 ```
 不考虑稀疏矩阵，时间排名为25，后面针对这一点进行优化。
 
-## 44.08 100.00 
+### 44.08 100.00 
 ```java
 class Solution {
     public int[][] multiply(int[][] A, int[][] B) {
@@ -969,9 +1837,9 @@ class Solution {
 ```
 用两个map存储稀疏图的数据。然后做处理。注意最后计算的时候的坐标，很难想，绕不过来
 
-# [438. Find All Anagrams in a String](https://leetcode.com/problems/find-all-anagrams-in-a-string/)
+## [438. Find All Anagrams in a String](https://leetcode.com/problems/find-all-anagrams-in-a-string/)
 
-## 22.89 88.00 TODO
+### 22.89 88.00 TODO
 ```java
 class Solution {
     public List<Integer> findAnagrams(String s, String p) {
@@ -1023,9 +1891,9 @@ class Solution {
 
 思路比较常规，一个指针从头到位即可。但是待优化。
 
-# [426. Convert Binary Search Tree to Sorted Doubly Linked List](https://leetcode.com/problems/convert-binary-search-tree-to-sorted-doubly-linked-list/)
+## [426. Convert Binary Search Tree to Sorted Doubly Linked List](https://leetcode.com/problems/convert-binary-search-tree-to-sorted-doubly-linked-list/)
 
-## 100.00 6.90 18mins TODO
+### 100.00 6.90 18mins TODO
 ```java
 /*
 // Definition for a Node.
@@ -1092,9 +1960,9 @@ class Solution {
 
 思路：divide and conquer。分治法的经典应用。使用子树的结果，拼成总体的结果即可。但是空间复杂度很高。待优化
 
-# [670. Maximum Swap](https://leetcode.com/problems/maximum-swap/)
+## [670. Maximum Swap](https://leetcode.com/problems/maximum-swap/)
 
-## FAIL
+### FAIL
 ```java
 class Solution {
     // bugfix: testcase 122 -> 221 not 212
@@ -1149,9 +2017,9 @@ class Solution {
 + 寻找从右向左的递减的序列，找峰值，但是要考虑相等的值的情况。
 + 想起来十分复杂，不易实现。可以优化为答案的贪心算法。
 
-# [34. Find First and Last Position of Element in Sorted Array](https://leetcode.com/problems/find-first-and-last-position-of-element-in-sorted-array/)
+## [34. Find First and Last Position of Element in Sorted Array](https://leetcode.com/problems/find-first-and-last-position-of-element-in-sorted-array/)
 
-## 100 97.16 25mins
+### 100 97.16 25mins
 ```java
 class Solution {
     public int[] searchRange(int[] nums, int target) {
@@ -1211,15 +2079,15 @@ class Solution {
 + 二分查找为了好让循环停止，所以使用**包含**边界的写法。这样只要写<就可以了。
 + 又写出了一个死循环bug。因为 写法是 mid = l+(l-r)/2，边界以左边界作为基准移动。所以在移动左边界的时候，其实跟右边界是不对等的。所以要判断一下移动左边界的特殊情况。
 
-# [721. Accounts Merge](https://leetcode.com/problems/accounts-merge/)
+## [721. Accounts Merge](https://leetcode.com/problems/accounts-merge/)
 
-## FAIL
+### FAIL
 + 这其实是图问题
 + 一个Account就是一个图，一个mail是一个点，就看点和点之间是否存在边
 + 如果是图，可以使用dfs。TODO
 + 可以使用并查集进行数据的处理，但是没有抽象成数据模型。
 
-## 并查集 60mins
+### 并查集 60mins
 ```java
 class Solution {
     public List<List<String>> accountsMerge(List<List<String>> accounts) {
@@ -1284,8 +2152,8 @@ class Solution {
 + 每个list 两两union
 + 遍历mail表，寻找每个的根节点，生成结果。
 
-# [785. Is Graph Bipartite?](https://leetcode.com/problems/is-graph-bipartite/)
-## 32.82 63.42 29mins TODO
+## [785. Is Graph Bipartite?](https://leetcode.com/problems/is-graph-bipartite/)
+### 32.82 63.42 29mins TODO
 ```java
 class Solution {
     public boolean isBipartite(int[][] graph) {
@@ -1317,9 +2185,9 @@ class Solution {
 思路：
 使用dfs，从一个点出发，依次用set标记剩下的点。除非某点存在边位于同一个set中。否则即为二分图
 
-# [958. Check Completeness of a Binary Tree](https://leetcode.com/problems/check-completeness-of-a-binary-tree/)
+## [958. Check Completeness of a Binary Tree](https://leetcode.com/problems/check-completeness-of-a-binary-tree/)
 
-## 11.74 100.00 50mins
+### 11.74 100.00 50mins
 ```java
 /**
  * Definition for a binary tree node.
@@ -1372,9 +2240,9 @@ class Solution {
 可以看出时间复杂度较高，但是空间复杂度不错。
 TODO: bfs
 
-# [523. Continuous Subarray Sum](https://leetcode.com/problems/continuous-subarray-sum/)
+## [523. Continuous Subarray Sum](https://leetcode.com/problems/continuous-subarray-sum/)
 
-## 26.60 88.24 19mins
+### 26.60 88.24 19mins
 ```java
 class Solution {
     public boolean checkSubarraySum(int[] nums, int k) {
@@ -1399,7 +2267,7 @@ class Solution {
 
 时间复杂度为 $O(n^2)$
 
-## hashMap 做法
+### hashMap 做法
 ```java
 class Solution {
     public boolean checkSubarraySum(int[] nums, int k) {
@@ -1422,8 +2290,8 @@ class Solution {
 + 仍然取sum，只不过这次是取 $sum\%k$
 + 如果有两个点，sum一样，则这两个点中间的和可以被k整除。
 
-# [1027. Longest Arithmetic Sequence](https://leetcode.com/problems/longest-arithmetic-sequence/)
-## 5.08 100.00 60mins
+## [1027. Longest Arithmetic Sequence](https://leetcode.com/problems/longest-arithmetic-sequence/)
+### 5.08 100.00 60mins
 ```java
 class Solution {
     Map<Integer, Set<Integer>> done = new HashMap<>();
@@ -1458,9 +2326,9 @@ class Solution {
 时间复杂度较高，因为有很多重复计算。需要有个方式记录做过的dfs. TODO
 注释的写法有bug：TODO
 
-# [825. Friends Of Appropriate Ages](https://leetcode.com/problems/friends-of-appropriate-ages/)
+## [825. Friends Of Appropriate Ages](https://leetcode.com/problems/friends-of-appropriate-ages/)
 
-## TLE 9mins
+### TLE 9mins
 ```java
 class Solution {
     public int numFriendRequests(int[] ages) {
@@ -1485,9 +2353,9 @@ $O(n^2)$ TLE 了。
 
 思路：可以以age作为key，这样的话复杂度会降低到 $O(k^2)$ k为age种类
 
-# [314. Binary Tree Vertical Order Traversal](https://leetcode.com/problems/binary-tree-vertical-order-traversal/)
+## [314. Binary Tree Vertical Order Traversal](https://leetcode.com/problems/binary-tree-vertical-order-traversal/)
 
-## WRONG ANSWER 
+### WRONG ANSWER 
 ```java
 /**
  * Definition for a binary tree node.
@@ -1530,7 +2398,7 @@ class Solution {
 所以DFS无法完成这个任务。
 我们需要BFS。
 
-## BFS 7.02 100.00
+### BFS 7.02 100.00
 ```java
 /**
  * Definition for a binary tree node.
@@ -1581,9 +2449,9 @@ class Solution {
 本来我的思路是，新建一个类，这个类包含col和val，但是看别人的做法，是**新建两个一样的数据结构存着两个值**，这样肯定比新建数据结构效率要高的。
 但是时间复杂度仍然不是最优。待优化TODO
 
-# [863. All Nodes Distance K in Binary Tree](https://leetcode.com/problems/all-nodes-distance-k-in-binary-tree/)
+## [863. All Nodes Distance K in Binary Tree](https://leetcode.com/problems/all-nodes-distance-k-in-binary-tree/)
 
-## FAIL 61.12 100.00 44mins
+### FAIL 61.12 100.00 44mins
 ```java
 /**
  * Definition for a binary tree node.
@@ -1648,9 +2516,9 @@ class Solution {
 + 使用bfs，每次队列中的都是一个距离的，距离不停加1
 + 注意初始化条件。很关键。
 
-# [416. Partition Equal Subset Sum](https://leetcode.com/problems/partition-equal-subset-sum/)
+## [416. Partition Equal Subset Sum](https://leetcode.com/problems/partition-equal-subset-sum/)
 
-## FAIL
+### FAIL
 这个题目的本质是求在一个集合中，是否存在一个子集，其和等于某个数值。本质的本质是**0/1背包问题**
 解法——动态规划。
 dp[i][j] = 前i个数字，是否存在一个集合 = j。
@@ -1658,3 +2526,408 @@ dp[i][j] = 前i个数字，是否存在一个集合 = j。
 $dp[i][j] = dp[i-1][j] || dp[i-1][j-nums[i]]$
 
 通过这个状态转换方程可以看出，我们可以优化空间复杂度至一维数组
+
+# EASY
+
+## [283. Move Zeroes](https://leetcode.com/problems/move-zeroes/)
+### 100.00% 98.60% 7.5min
+```java
+class Solution {
+    public void moveZeroes(int[] nums) {
+        int firstZero = -1;
+        for(int iter = 0; iter < nums.length; ++iter){
+            if(nums[iter] == 0){
+                if(firstZero < 0) firstZero = iter;
+            }else{
+                if(firstZero >= 0){
+                    swap(nums, iter, firstZero);
+                    firstZero++;
+                }
+            }
+        }
+    }
+    
+    private void swap(int[] nums, int i, int j){
+        int tmp = nums[i];
+        nums[i] = nums[j];
+        nums[j] = tmp;
+    }
+}
+```
+## [157. Read N Characters Given Read4](https://leetcode.com/problems/read-n-characters-given-read4/)
+###  100.00% 100.00% 17min
+
+```java
+/**
+ * The read4 API is defined in the parent class Reader4.
+ *     int read4(char[] buf);
+ */
+public class Solution extends Reader4 {
+    /**
+     * @param buf Destination buffer
+     * @param n   Number of characters to read
+     * @return    The number of actual characters read
+     */
+    public int read(char[] buf, int n) {
+        if(n <= 0) return 0;
+        
+        int iter = n/4;
+        
+        int result = 0;
+        char[] tmpBuf = new char[4];
+        for(int i = 0; i < iter; i++){
+            int tmpResult = read4(tmpBuf);
+            result += tmpResult;
+            for(int j = 0; j < tmpResult; j++){
+                buf[4*i + j] = tmpBuf[j];
+            }
+        }
+        //bugfix: 最后一次循环要特殊判断，取两者里面小的
+        int left = n%4;
+        if(left == 0) return result;
+        
+        int lastResult = read4(tmpBuf);
+        int iter2 = left < lastResult?left:lastResult;
+        
+        for(int i = 0;i<iter2; i++){
+            buf[4*iter + i] = tmpBuf[i];
+        }
+        //注意加的这个数值
+        result += iter2;
+        return result;
+        
+    }
+}
+```
+
+消耗时间较多了，注意两个bug
+
+## [278. First Bad Version](https://leetcode.com/problems/first-bad-version/)
+### 99.48% 100.00% 20min
+
+```java
+/* The isBadVersion API is defined in the parent class VersionControl.
+      boolean isBadVersion(int version); */
+
+public class Solution extends VersionControl {
+    public int firstBadVersion(int n) {
+        //bugfix r = n + 1
+        int l = 1, r = n, mid;
+        while(l <= r){
+            if(l == r) return l;
+            mid = l + (r - l)/2;
+            if(isBadVersion(mid)) r = mid;
+            else l = mid + 1;
+        }
+        return l;
+    }
+}
+```
+
+**bugfix**:注意binary search的时候，边界是否包括结果可能对算法正确与否产生影响。比如如果认为边界不包括结果，则 r = n + 1。那么在后续判断的时候会令 r = mid+1; 那么有一种情况会造成死循环: [l][结果][r]。这时候会造成死循环。注意考虑这种边界条件.
+
+## [125. Valid Palindrome](https://leetcode.com/problems/valid-palindrome/)
+
+### 96.21 92.86 20mins
+
+```java
+class Solution {
+    public boolean isPalindrome(String s) {
+        if(s.length() == 0) return true;
+        int l = 0, r = s.length() - 1;
+        while(l != r){
+            while(l < s.length() && !isAlphaNum(s.charAt(l))) l++;
+            while(r >= 0 && !isAlphaNum(s.charAt(r))) r--;
+            if(l >= r) return true;
+            //bugfix ignore case
+            if(getChar(s, l++) != getChar(s, r--)) return false;
+        }
+        
+        return true;
+    }
+    
+    private boolean isAlphaNum(char c){
+        if(c >= 'a' && c <= 'z')
+            return true;
+        if(c >= 'A' && c <= 'Z')
+            return true;
+        if(c >= '0' && c <= '9')
+            return true;
+        return false;
+    }
+    
+    private int getChar(String s, int i){
+        char c = s.charAt(i);
+        if(c >= '0' && c <= '9') return c;
+        if(c >= 'a' && c <= 'z') return c - 'a';
+        if(c >= 'A' && c <= 'Z') return c - 'A';
+        return c;
+    }
+}
+```
+题目不难，但是被java语法卡住了
+**tips**:
++ 移动指针的时候注意边界，不要越界
++ 判断边界条件及时返回
++ java中'a'+<int>编译器不能支持，但是'a'+10是支持的。（因为编译器编译时能判断后者没越界）所以需要使用另外一种方式替代ignorecase的判断。
+
+## [1. Two Sum](https://leetcode.com/problems/two-sum/)
+### 98.89 98.95 10mins
+```java
+class Solution {
+    public int[] twoSum(int[] nums, int target) {
+        Map<Integer, Integer> map = new HashMap<>();
+        for(int i = 0; i < nums.length; ++i){
+            int n = nums[i];
+            if(map.containsKey(n) && n*2 == target) return new int[]{map.get(n), i};
+            if(map.containsKey(target-n)) return new int[]{map.get(target-n), i};
+            map.put(n, i);
+        }
+        return new int[2];
+    }
+}
+```
+**tips**: 注意相等的情况，简单的题目暗藏对情况的全面考虑
+
+## [88. Merge Sorted Array](https://leetcode.com/problems/merge-sorted-array/)
+### 100.00 100.00 15min
+
+```java
+class Solution {
+    public void merge(int[] nums1, int m, int[] nums2, int n) {
+        int leftLength = m + n;
+        //bugfix
+        while(leftLength != 0){
+            if(m == 0){
+                for(int i = 0; i < n; i++){
+                    nums1[i] = nums2[i];
+                }
+                break;
+            }
+            if(n == 0){
+                break;
+            }
+            
+            if(nums1[m-1] >= nums2[n-1]){
+                //bugfix leftLength++ indexOutOfBound
+                nums1[--leftLength] = nums1[--m];
+            }else{
+                nums1[--leftLength] = nums2[--n];
+            }
+        }
+    }
+}
+```
+**tips**:
++ 最好用length 而并非index（length比index多1）
++ 注意先减后用
+
+## [350. Intersection of Two Arrays II](https://leetcode.com/problems/intersection-of-two-arrays-ii/)
+### 17.64 83.87 10mins
+```java
+class Solution {
+    public int[] intersect(int[] nums1, int[] nums2) {
+        Map<Integer, Integer> n1Map = new HashMap<>();
+        Map<Integer, Integer> n2Map = new HashMap<>();
+        Map<Integer, Integer> resultMap = new HashMap<>();
+        for(int n : nums1) {
+            if(!n1Map.containsKey(n))
+                n1Map.put(n, 0);
+            n1Map.put(n, n1Map.get(n)+1);
+        }
+        
+        for(int n : nums2) {
+            if(!n2Map.containsKey(n))
+                n2Map.put(n, 0);
+            n2Map.put(n, n2Map.get(n)+1);
+        }
+        
+        for(Map.Entry<Integer, Integer> entry: n1Map.entrySet()) {
+            if(n2Map.containsKey(entry.getKey()))
+                resultMap.put(entry.getKey(), Math.min(entry.getValue(), n2Map.get(entry.getKey())));
+        }
+        int number = 0;
+        for(Map.Entry<Integer, Integer> entry: resultMap.entrySet()) {
+            number += entry.getValue();
+        }
+        
+        int[] result = new int[number];
+        number = 0;
+        for(Map.Entry<Integer, Integer> entry: resultMap.entrySet()) {
+            int val = entry.getValue();
+            while(val-- != 0)result[number++] = entry.getKey();
+        }
+        return result;
+    }
+}
+```
+
+使用两个map进行统计，然后用一个resultMap去整理数据，最后输出。但是能看出时间复杂度很差。
+
+### 91.22 33.87
+```java
+public class Solution {
+    public int[] intersect(int[] nums1, int[] nums2) {
+        List<Integer> res = new ArrayList<Integer>();
+        Arrays.sort(nums1);
+        Arrays.sort(nums2);
+        for(int i = 0, j = 0; i< nums1.length && j<nums2.length;){
+                if(nums1[i]<nums2[j]){
+                    i++;
+                }
+                else if(nums1[i] == nums2[j]){
+                    res.add(nums1[i]);
+                    i++;
+                    j++;
+                }
+                else{
+                    j++;
+                }
+        }
+        int[] result = new int[res.size()];
+        for(int i = 0; i<res.size();i++){
+            result[i] = res.get(i);
+        }
+        return result;
+    }
+}
+```
+
+**tips**:
+可以看得出，虽然时间复杂度看上去较慢，达到 nlgn，但是速度很快。这是因为**对基础类型的排序java非常快**
+
+## [953. Verifying an Alien Dictionary](https://leetcode.com/problems/verifying-an-alien-dictionary/)
+
+### 100.00 100.00 17mins
+```java
+class Solution {
+    public boolean isAlienSorted(String[] words, String order) {
+        int[] dic = toDic(order);
+        // bugfix
+        for(int i = 0; i < words.length-1; i++) {
+            if(compare(words[i], words[i+1], dic) == 1) return false;
+        }
+        return true;
+    }
+    
+    private int[] toDic(String order) {
+        int ind = 0;
+        int[] result = new int[26];
+        for(char c: order.toCharArray()){
+            result[c-'a'] = ind++; 
+        }
+        return result;
+    }
+    
+    private int compare(String s1, String s2, int[] dic) {
+        int i1, i2;
+        for(i1 = 0, i2 = 0; i1 < s1.length() && i2 < s2.length(); i1++, i2++) {
+            char c1 = s1.charAt(i1), c2 = s2.charAt(i2);
+            if(dic[c1-'a'] < dic[c2-'a']) return -1;
+            else if(dic[c1-'a'] > dic[c2-'a']) return 1;
+        }
+        
+        if(s1.length() == s2.length()) return 0;
+        if(i1 == s1.length()) return -1;
+        return 1;
+    }
+}
+```
+
+注意bugfix地方，边界写错了
+
+## [543. Diameter of Binary Tree](https://leetcode.com/problems/diameter-of-binary-tree/)
+
+### TODO: 13.73 19.48 20mins
+```java
+/**
+ * Definition for a binary tree node.
+ * public class TreeNode {
+ *     int val;
+ *     TreeNode left;
+ *     TreeNode right;
+ *     TreeNode(int x) { val = x; }
+ * }
+ */
+class Solution {
+    public int diameterOfBinaryTree(TreeNode root) {
+        return traversal(root);
+    }
+    
+    private int traversal(TreeNode root) {
+        if(root == null) return 0;
+        int l = traversal(root.left);
+        int mid = comp(root);
+        int r = traversal(root.right);
+        return Math.max(l, Math.max(mid, r));
+    }
+    
+    private int comp(TreeNode root) {
+        if(root == null) return 0;
+        int l = dfs(root.left);
+        int r = dfs(root.right);
+        return l + r;
+    }
+    
+    private int dfs(TreeNode root) {
+        if(root == null) return 0;
+        int l = dfs(root.left);
+        int r = dfs(root.right);
+        return 1 + Math.max(l, r);
+    }
+}
+```
+
+**思路**：
+中序遍历全部的点，每个点计算一次最大值。
+存在大量的重复计算。
+和内存占用。（并不会分析）待优化。
+
+## [680. Valid Palindrome II](https://leetcode.com/problems/valid-palindrome-ii/)
+
+### TODO: 9.68 97.22 11mins
+```java
+class Solution {
+    public boolean validPalindrome(String s) {
+        if(s.length() <= 1) return true;
+        
+        for(int i = 0; i < s.length()/2; i ++)
+            if(s.charAt(i) != s.charAt(s.length()-1-i))
+                return check(s.substring(i, s.length()-1-i)) || check(s.substring(i+1, s.length()-i));
+        return true;
+    }
+    
+    private boolean check(String s){
+        if(s == null || s.length() <= 1) return true;
+        for(int i = 0; i < s.length()/2; i ++)
+            if(s.charAt(i) != s.charAt(s.length()-1-i))
+                return false;
+        return true;
+    }
+}
+```
+
+题目不难，去掉一个字母能回文。判断去掉哪个即可。
+但是时间效率貌似只有9.待优化
+
+## [415. Add Strings](https://leetcode.com/problems/add-strings/)
+### 37.64 100.00 8mins
+```java
+class Solution {
+    public String addStrings(String num1, String num2) {
+        StringBuilder sb = new StringBuilder();
+        int cas = 0;
+        for(int i = 0; i < Math.max(num1.length(), num2.length()); i++) {
+            int c1 = num1.length()-1-i < 0 ? 0 : num1.charAt(num1.length()-1-i)-'0';
+            int c2 = num2.length()-1-i < 0 ? 0 : num2.charAt(num2.length()-1-i)-'0';
+            int sum = cas + c1 + c2;
+            cas = sum/10;
+            sb.insert(0, sum%10);
+        }
+        if(cas != 0) sb.insert(0, cas);
+        return sb.toString();
+    }
+}
+```
+
+TODO 时间有待提升
