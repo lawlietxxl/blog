@@ -846,3 +846,7 @@ class Solution {
 ```
 
 有了上一题dfs的经验，这一题会做的简单一些。需要注意的是每次dfs要输入方向，同时dfs之后要回退到当前位置，方向也要回位。
+
+# [65. Valid Number](https://leetcode.com/problems/valid-number/)
+
+就是考虑边界条件特别多，TODO吧

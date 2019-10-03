@@ -1580,3 +1580,81 @@ class Solution {
 ```
 本来我的思路是，新建一个类，这个类包含col和val，但是看别人的做法，是**新建两个一样的数据结构存着两个值**，这样肯定比新建数据结构效率要高的。
 但是时间复杂度仍然不是最优。待优化TODO
+
+# [863. All Nodes Distance K in Binary Tree](https://leetcode.com/problems/all-nodes-distance-k-in-binary-tree/)
+
+## FAIL 61.12 100.00 44mins
+```java
+/**
+ * Definition for a binary tree node.
+ * public class TreeNode {
+ *     int val;
+ *     TreeNode left;
+ *     TreeNode right;
+ *     TreeNode(int x) { val = x; }
+ * }
+ */
+class Solution {
+    public List<Integer> distanceK(TreeNode root, TreeNode target, int K) {
+        Map<TreeNode, TreeNode> pMap = new HashMap<>();
+        dfs(root, null, pMap);
+        
+        Queue<TreeNode> q = new LinkedList<>();
+        q.offer(null);
+        q.offer(target);
+        Set<TreeNode> seen = new HashSet<>();
+        seen.add(target);
+        // bugfix
+        seen.add(null);
+        
+        int dis = 0;
+        // null acctually is a sentinel
+        while(q.size() != 0) {
+            TreeNode cur = q.poll();
+            if(cur == null) {
+                if(dis == K) {
+                    List<Integer> res = new ArrayList<>();
+                    for(TreeNode t: q) res.add(t.val);
+                    return res;
+                } else dis ++;
+                q.offer(null);
+            } else {
+                if(!seen.contains(cur.left)) {
+                    seen.add(cur.left);
+                    q.offer(cur.left);
+                }
+                if(!seen.contains(cur.right)) {
+                    seen.add(cur.right);
+                    q.offer(cur.right);
+                }
+                if(!seen.contains(pMap.get(cur))) {
+                    seen.add(pMap.get(cur));
+                    q.offer(pMap.get(cur));
+                }
+            }
+        }
+        return new ArrayList<>();
+    }
+    private void dfs(TreeNode n, TreeNode p, Map<TreeNode, TreeNode> pMap) {
+        if(n == null) return;
+        pMap.put(n, p);
+        dfs(n.left, n, pMap);
+        dfs(n.right, n, pMap);
+    }
+}
+```
+自己实现没有想出来，所以看了答案。
+思路：
++ 使用bfs，每次队列中的都是一个距离的，距离不停加1
++ 注意初始化条件。很关键。
+
+# [416. Partition Equal Subset Sum](https://leetcode.com/problems/partition-equal-subset-sum/)
+
+## FAIL
+这个题目的本质是求在一个集合中，是否存在一个子集，其和等于某个数值。本质的本质是**0/1背包问题**
+解法——动态规划。
+dp[i][j] = 前i个数字，是否存在一个集合 = j。
+状态转换方程：如果我们不pick nums[i]，则为前者；如果pick nums[i]，则为后者
+$dp[i][j] = dp[i-1][j] || dp[i-1][j-nums[i]]$
+
+通过这个状态转换方程可以看出，我们可以优化空间复杂度至一维数组
