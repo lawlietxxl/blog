@@ -866,17 +866,6 @@ class Solution {
 
 # MEDIUM
 
----
-title: leetcode中facebook的题目 -- medium篇
-tags: []
-categories: []
-keywords: []
-date: 2019-08-15 23:34:31
-mathjax: true
----
-同上。
-<!--more-->
-
 ## [91. Decode Ways](https://leetcode.com/problems/decode-ways/)
 ###  98.63% 100.00% 43min
 ```java
