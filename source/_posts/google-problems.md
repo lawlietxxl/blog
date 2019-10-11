@@ -170,4 +170,79 @@ class Solution {
 
 注意bugfix一栏。这里主要是没有考虑一种case 即 "abc" 或者 "5[abc]bc" 这种没有中括号的场景。需要注意。
 
+## [981. Time Based Key-Value Store](https://leetcode.com/problems/time-based-key-value-store/)
+### FAIL 20mins
+```java
+class TimeMap {
+
+    /** Initialize your data structure here. */
+    
+    Map<String, Node> map = new HashMap<>();
+    
+    public TimeMap() {
+        
+    }
+    
+    public void set(String key, String value, int timestamp) {
+        if(map.get(key) == null) {
+            Node n = new Node();
+            n.value = value;
+            n.timestamp = timestamp;
+            map.put(key, n);
+        } else {
+            map.get(key).insert(value, timestamp);
+        }
+    }
+    
+    public String get(String key, int timestamp) {
+        if(map.get(key) == null) return "";
+        return map.get(key).get(timestamp);
+    }
+    
+    class Node {
+        String value;
+        int timestamp;
+        Node left, right;
+        
+        String get(int ts) {
+            if(timestamp == ts) return value;
+            if(timestamp > ts)
+                if(left == null) return "";
+                else return left.get(ts);
+            else
+                if(right == null) return value;
+                else if(right.timestamp > ts) return value;
+                else return right.get(ts);
+        }
+        
+        void insert(String v, int ts){
+            if(ts == timestamp) value = v;
+            if(ts > timestamp)
+                if(right == null) {
+                    Node n = new Node();
+                    n.value = v;
+                    n.timestamp = ts;
+                    right = n;
+                } else right.insert(v, ts);
+            if(ts < timestamp)
+                if(left == null) {
+                    Node n = new Node();
+                    n.value = v;
+                    n.timestamp = ts;
+                    left = n;
+                } else left.insert(v, ts);
+        }
+    }
+}
+
+/**
+ * Your TimeMap object will be instantiated and called as such:
+ * TimeMap obj = new TimeMap();
+ * obj.set(key,value,timestamp);
+ * String param_2 = obj.get(key,timestamp);
+ */
+```
+
+自己写了一个bst。但是由于不平衡，所以会超时。看了答案，答案用了jdk中的binarySearch和treeMap的floorKey。TODO：正确答案 和 平衡搜索树模板
+
 # EASY
