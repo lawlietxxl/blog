@@ -20,6 +20,74 @@ mathjax: true
 <!--more-->
 
 # HARD
+## [57. Insert Interval](https://leetcode.com/problems/insert-interval/)
+### 10.42 6.25 35mins
+```java
+class Solution {
+    public int[][] insert(int[][] intervals, int[] newInterval) {
+        // look for an interval start > <= newIntervar start
+        // look for an interval end > <= newIntervar end
+        
+        TreeMap<Integer, Integer> start = new TreeMap<>();
+        TreeMap<Integer, Integer> end = new TreeMap<>();
+        
+        for(int i = 0; i < intervals.length; i++) {
+            start.put(intervals[i][0], i);
+            end.put(intervals[i][1], i);
+        }
+        
+        Integer ns1 = start.floorKey(newInterval[0]), 
+        ns2 = start.ceilingKey(newInterval[0]), 
+        ne1 = end.floorKey(newInterval[1]), 
+        ne2 = end.ceilingKey(newInterval[1]);
+        
+        int ms, me;
+        if(ns1 != null && intervals[start.get(ns1)][1] >= newInterval[0]) ms = start.get(ns1);
+        else if (ns2 != null && intervals[start.get(ns2)][0] <= newInterval[1]) ms = start.get(ns2);
+        else {
+            List<int[]> res = new ArrayList<>();
+            boolean inserted = false;
+            for(int[] interval: intervals) {
+                if(!inserted && newInterval[0] < interval[0]) {res.add(newInterval); inserted = true;}
+                res.add(interval);
+            }
+            if(!inserted) res.add(newInterval);
+            return res.toArray(new int[1][]);
+        }
+        
+        if(ne2 != null && intervals[end.get(ne2)][0] <= newInterval[1]) me = end.get(ne2);
+        else if(ne1 != null && intervals[end.get(ne1)][1] >= newInterval[0]) me = end.get(ne1);
+        else {
+            List<int[]> res = new ArrayList<>();
+            boolean inserted = false;
+            for(int[] interval: intervals) {
+                if(!inserted && newInterval[0] < interval[0]) {res.add(newInterval); inserted = true;}
+                res.add(interval);
+            }
+            if(!inserted) res.add(newInterval);
+            return res.toArray(new int[1][]);
+        }
+        
+        newInterval[0] = Math.min(newInterval[0], intervals[ms][0]);
+        newInterval[1] = Math.max(newInterval[1], intervals[me][1]);
+        
+        List<int[]> res = new ArrayList<>();
+        boolean inserted = false;
+        for(int i = 0; i < intervals.length; i++) {
+            int[] interval = intervals[i];
+            if(!inserted && newInterval[0] < interval[0]) {res.add(newInterval); inserted = true;}
+            if(i < ms || i > me) res.add(interval);
+        }
+        if(!inserted) res.add(newInterval);
+        return res.toArray(new int[1][]);
+        
+    }
+}
+```
+
+利用两个treeMap，分别保存start和end。然后分别取newInterval start 和 end，离的最近的两个interval。做了复杂的比较，然后进行merge。
+时间和空间复杂度不好，TODO。
+
 
 # MEDIUM
 ## [200. Number of Islands](https://leetcode.com/problems/number-of-islands/)
@@ -246,3 +314,33 @@ class TimeMap {
 自己写了一个bst。但是由于不平衡，所以会超时。看了答案，答案用了jdk中的binarySearch和treeMap的floorKey。TODO：正确答案 和 平衡搜索树模板
 
 # EASY
+
+## [05. Isomorphic Strings](https://leetcode.com/problems/isomorphic-strings/)
+
+### 6.29 100.00 7mins
+```java
+class Solution {
+    public boolean isIsomorphic(String s, String t) {
+        char[] cs1 = s.toCharArray();
+        char[] cs2 = t.toCharArray();
+        
+        Map<Character, Character> m = new HashMap<>();
+        // bugfix 1 for 1
+        Map<Character, Character> m2 = new HashMap<>();
+        for(int i = 0; i < cs1.length; i++) {
+            if(m.containsKey(cs1[i])) {
+                if(!m.get(cs1[i]).equals(cs2[i])) return false;
+            }
+            if(m2.containsKey(cs2[i])) {
+                if(!m2.get(cs2[i]).equals(cs1[i])) return false;
+            }
+            
+            m.put(cs1[i], cs2[i]);
+            m2.put(cs2[i], cs1[i]);
+        }
+        return true;
+    }
+}
+```
+
+TODO 时间太差。
