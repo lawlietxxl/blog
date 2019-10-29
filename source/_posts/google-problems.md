@@ -95,6 +95,40 @@ class Solution {
 一开始我用的quickSort，但是quickSort是不稳定的，是无法得到正确结果的（其实也没写出来）
 需要使用**稳定的排序算法**，merge sort。记录index result。
 
+## [410. Split Array Largest Sum](https://leetcode.com/problems/split-array-largest-sum/)
+### FAIL 超时了
+```java
+class Solution {
+    public int splitArray(int[] nums, int m) {
+        return split(nums, 0, nums.length, m);
+    }
+    
+    int split(int[] nums, int l, int r, int m) {
+        if(l >= r ||m > r - l || m == 0) return -1;
+        if(m == r - l) {
+            int res = 0;
+            for(int i = l; i < r; i++) res = Math.max(res, nums[i]);
+            return res;
+        }
+        if(m == 1) {
+            int res = 0;
+            for(int i = l; i < r; i++) res += nums[i];
+            return res;
+        }
+        int res = Integer.MAX_VALUE, firstSum = 0;
+        
+        for(int i = l; i < r; i++) {
+            firstSum += nums[i];
+            int tmp = split(nums, i+1, r, m-1);
+            if(tmp != -1) res = Math.min(res, Math.max(tmp, firstSum));
+        }
+        return res;
+    }
+}
+```
+
+这个复杂度 = brute-force了。所以过不去。 TODO
+
 # MEDIUM
 ## [200. Number of Islands](https://leetcode.com/problems/number-of-islands/)
 
