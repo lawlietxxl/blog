@@ -129,6 +129,65 @@ class Solution {
 
 这个复杂度 = brute-force了。所以过不去。 TODO
 
+## [329. Longest Increasing Path in a Matrix](https://leetcode.com/problems/longest-increasing-path-in-a-matrix/)
+### FAIL WRONG
+```java
+class Solution {
+    public int longestIncreasingPath(int[][] matrix) {
+        if(matrix.length == 0) return 0;
+        int r = matrix.length, c = matrix[0].length;
+        
+        int[][] res = new int[r][c];
+        int result = 0;
+        // right down >
+        // init
+        res[0][0] = 1;
+        for(int i = 1; i < r; i++)
+            if(matrix[i][0] > matrix[i-1][0]) 
+                res[i][0] = res[i-1][0] + 1;
+            else res[i][0] = 1;
+        for(int i = 1; i < c; i++)
+            if(matrix[0][i] > matrix[0][i-1])
+                res[0][i] = res[0][i-1] + 1;
+            else res[0][i] = 1;
+        for(int i = 1; i < r; i++)
+            for(int j = 1; j < c; j++) {
+                int tmp = 1;
+                if(matrix[i][j] > matrix[i-1][j]) tmp = res[i-1][j]+1;
+                if(matrix[i][j] > matrix[i][j-1]) tmp = Math.max(tmp, res[i][j-1]+1);
+                res[i][j] = tmp;
+            }
+        for(int[] line : res)
+            for(int n : line)
+                result = Math.max(result, n);
+        
+        // right down <
+        int[][] res2 = new int[r][c];
+        res2[0][0] = 1;
+        for(int i = 1; i < r; i++)
+            if(matrix[i][0] < matrix[i-1][0]) 
+                res2[i][0] = res2[i-1][0] + 1;
+            else res2[i][0] = 1;
+        for(int i = 1; i < c; i++)
+            if(matrix[0][i] < matrix[0][i-1])
+                res2[0][i] = res2[0][i-1] + 1;
+            else res2[0][i] = 1;
+        for(int i = 1; i < r; i++)
+            for(int j = 1; j < c; j++) {
+                int tmp = 1;
+                if(matrix[i][j] < matrix[i-1][j]) tmp = res2[i-1][j]+1;
+                if(matrix[i][j] < matrix[i][j-1]) tmp = Math.max(tmp, res2[i][j-1]+1);
+                res2[i][j] = tmp;
+            }
+        for(int[] line : res2)
+            for(int n : line)
+                result = Math.max(result, n);
+        return result;
+    }
+}
+```
+使用了DP，但是这是不对的。DP只考虑从左到右，从上到下，单向的。对于一个递增的环是没有解决的。后续尝试DFS todo
+
 # MEDIUM
 ## [200. Number of Islands](https://leetcode.com/problems/number-of-islands/)
 
@@ -622,6 +681,68 @@ class Solution {
 ```
 
 写的很丑陋。需要改进。TODO.
+
+## [430. Flatten a Multilevel Doubly Linked List](https://leetcode.com/problems/flatten-a-multilevel-doubly-linked-list/)
+
+### 100.00 100.00 30mins
+```java
+/*
+// Definition for a Node.
+class Node {
+    public int val;
+    public Node prev;
+    public Node next;
+    public Node child;
+
+    public Node() {}
+
+    public Node(int _val,Node _prev,Node _next,Node _child) {
+        val = _val;
+        prev = _prev;
+        next = _next;
+        child = _child;
+    }
+};
+*/
+class Solution {
+    public Node flatten(Node head) {
+        if(head == null) return null;
+        Node[] nodes = doFlatten(head);
+        return nodes[0];
+    }
+    
+    Node[] doFlatten(Node head) {
+        if(head == null) return null;
+        Node lastNode;
+        Node[] res = new Node[2];
+        res[0] = head;
+        if(head.child == null) {
+            lastNode = head;
+            head = head.next;
+        } else {
+            Node[] childNodes = doFlatten(head.child);
+            head.child = null;
+            Node tmp = head.next;
+            head.next = childNodes[0];
+            childNodes[0].prev = head;
+            lastNode = childNodes[1];
+            head = tmp;
+        }
+        if(head == null) {
+            res[1] = lastNode;
+            return res;
+        }
+        
+        Node[] nextNodes = doFlatten(head);
+        lastNode.next = nextNodes[0];
+        nextNodes[0].prev = lastNode;
+        res[1] = nextNodes[1];
+        return res;
+    }
+}
+```
+
+都是用递归。重点在于设计递归结果。本题的结果设计为，后续结果的头和尾。
 
 # EASY
 
