@@ -744,6 +744,52 @@ class Solution {
 
 都是用递归。重点在于设计递归结果。本题的结果设计为，后续结果的头和尾。
 
+## [1048. Longest String Chain](https://leetcode.com/problems/longest-string-chain/)
+
+### 7.73 100.00 40mins TODO
+```java
+class Solution {
+    public int longestStrChain(String[] words) {
+        Arrays.sort(words, (o1, o2) -> {
+            if(o1.length() < o2.length()) return -1;
+            else if (o1.length() == o2.length()) return 0;
+            else return 1;
+        });
+        Map<String, Integer> res = new HashMap<>();
+        for(String word: words) {
+            if(res.containsKey(word)) continue;
+            res.put(word, 1);
+            for(String key: res.keySet()) {
+                if(isPre(key, word)) {
+                    res.put(word, Math.max(res.get(key) + 1, res.get(word)));
+                    // bugfix must not break
+                    // break;
+                }
+            }
+        }
+        int resInt = 1;
+        for(Map.Entry<String, Integer> entry: res.entrySet()) {
+            resInt = Math.max(resInt, entry.getValue());
+        }
+        return resInt;
+    }
+    
+    private boolean isPre(String w1, String w2) {
+        if(w1.length() + 1 != w2.length()) return false;
+        boolean skipped = false;
+        for(int i = 0, j = 0; i < w1.length() && j < w2.length(); i++, j++) {
+            if(w1.charAt(i) == w2.charAt(j)) continue;
+            if(skipped) return false;
+            // bugfix j++;
+            i--;
+            skipped = true;
+        }
+        return true;
+    }
+}
+```
+写了一个巨慢的算法，一开始写错的原因是，排序需要按照字符串长度，而不是默认长度，一开始弄混了。
+
 # EASY
 
 ## [05. Isomorphic Strings](https://leetcode.com/problems/isomorphic-strings/)
