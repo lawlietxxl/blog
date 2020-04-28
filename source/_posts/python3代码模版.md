@@ -54,6 +54,74 @@ message = (
 # python3.7之后 dict 类型的key值是ordered，意思是插入的顺序是固定的。
 ```
 
++ bin 用法
+
+```python
+# binary 用法
+print(bin(5))
+print(bin(5).count('1'))
+print(bin(5).count('01'))
+
+# 输出
+0b101
+2
+1
+```
+
+## [collections](https://docs.python.org/3/library/collections.html?highlight=counter#collections.Counter)
+
++ heapq 用法
+
+默认维护的是小顶堆。如果要搞大顶堆，加个负号就可以。
+https://docs.python.org/3/library/heapq.html
+
+```python
+import heapq
+heapq.heappush(heap, item)
+heapq.heappop(heap)
+heapq.heappushpop(heap, item)
+heapq.heapify(x)
+heapq.nlargest(n, iterable, key=None)
+heapq.nsmallest(n, iterable, key=None)
+```
+
++ collections.Counter 用法
+
+counter 相当于对一个iteratalble 进行计数的dict。方括号跟dict一样使用的方法。语法糖？
+
+```python
+c = collections.Counter([1,1,1,2,3,3])
+c = collections.Counter('aaabbbaaa')
+sorted(c.elements()) # [a,a,a,a,a,b,b,b]
+Counter('abracadabra').most_common(3) # [('a', 5), ('b', 2), ('r', 2)]
+
+```
+
++ collections.deque 用法
+
+deque是 队列 和 栈 的实现。
+
+```python
+d = deque([iterable[, maxlen])
+d.append(x)
+d.pop()
+
+d.appendleft(x)
+d.popleft()
+
+d.clear()
+d.copy()
+
+d.extend()
+d.extendleft()
+
+d.insert(i, x)
+
+d.reverse()
+d.rotate(n=1) # n > 0, then d.appendleft(d.pop()); n < 0, then d.append(d.popleft())
+
+```
+
 # Sequences
 + ```list, tuple, and collections.deque``` can hold items of different types, including nested containers.
 + ```str, bytes, bytearray, memoryview, and array.array ```hold items of one simple type.
