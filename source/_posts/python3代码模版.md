@@ -122,6 +122,29 @@ d.rotate(n=1) # n > 0, then d.appendleft(d.pop()); n < 0, then d.append(d.poplef
 
 ```
 
++ lru_cache
+```python
+from functools import lru_cache
+@lru_cache
+def count_vowels(sentence):
+    sentence = sentence.casefold()
+    return sum(sentence.count(vowel) for vowel in 'aeiou')
+```
+
++ 常用str方法
+```python
+str.endswith(suffix[, start[, end]])
+str.index(sub[, start[, end]])
+str.rindex(sub[, start[, end]])
+str.isalnum()
+str.isalpha()
+str.isdecimal() # 包含unicode格式
+str.isdigit()
+str.islower()
+str.isupper()
+str.join(iterable)
+```
+
 # Sequences
 + ```list, tuple, and collections.deque``` can hold items of different types, including nested containers.
 + ```str, bytes, bytearray, memoryview, and array.array ```hold items of one simple type.
